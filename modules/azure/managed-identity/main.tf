@@ -1,3 +1,13 @@
+terraform {
+  required_version = ">= 1.5.0, < 2.0.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
 resource "azurerm_user_assigned_identity" "this" {
   name                = var.name
   resource_group_name = var.resource_group_name

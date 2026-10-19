@@ -1,3 +1,13 @@
+terraform {
+  required_version = ">= 1.5.0, < 2.0.0"
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.0"
+    }
+  }
+}
+
 resource "azurerm_user_assigned_identity" "control_plane" {
   name                = "${var.name}-control-plane"
   location            = var.location
