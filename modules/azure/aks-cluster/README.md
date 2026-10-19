@@ -57,3 +57,5 @@ Object field definitions are documented in `variables.tf`.
 | `cluster_name` | AKS cluster name. |
 | `oidc_issuer_url` | Issuer for workload federation. |
 | `kubelet_identity` | AKS kubelet identity. |
+| `host` | Sensitive Kubernetes API endpoint, after node pool provisioning. |
+| `cluster_ca_certificate` | Sensitive decoded CA certificate, after node pool provisioning. |
