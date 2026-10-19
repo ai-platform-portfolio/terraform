@@ -24,3 +24,18 @@ variable "federated_credentials" {
   }))
   default = {}
 }
+
+variable "role_assignments" {
+  description = "Scoped Azure roles granted to this identity, keyed by purpose."
+  type = map(object({
+    scope                = string
+    role_definition_name = string
+  }))
+  default = {}
+}
+
+variable "principal_type" {
+  description = "Azure principal type used for managed identity role assignments."
+  type        = string
+  default     = "ServicePrincipal"
+}
