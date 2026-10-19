@@ -1,0 +1,13 @@
+name: Validate Terraform
+on:
+  pull_request:
+  push:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  validate:
+    uses: ai-platform-portfolio/ops-shared/.github/workflows/validate.yml@1afa38fcafcad127abfeef380b55b12afdfda411
+    with:
+      terraform-directories: '["modules/azure/network", "modules/azure/aks-cluster", "modules/azure/managed-identity", "modules/azure/argocd-bootstrap"]'
+      terraform-version: '1.5.7'
