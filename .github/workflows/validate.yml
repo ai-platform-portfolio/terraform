@@ -6,20 +6,8 @@ on:
 permissions:
   contents: read
 jobs:
-  terraform:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        directory: [modules/azure/network, modules/azure/aks-cluster, modules/azure/managed-identity, modules/azure/argocd-bootstrap]
-    steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-        with:
-          persist-credentials: false
-      - uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.5.7
-      - run: terraform fmt -check -recursive .
-      - run: terraform init -backend=false -input=false
-        working-directory: ${{ matrix.directory }}
-      - run: terraform validate
-        working-directory: ${{ matrix.directory }}
+  validate:
+    uses: ai-platform-portfolio/ops-shared/.github/workflows/validate.yml@1afa38fcafcad127abfeef380b55b12afdfda411
+    with:
+      terraform-directories: '["modules/azure/network", "modules/azure/aks-cluster", "modules/azure/managed-identity", "modules/azure/argocd-bootstrap"]'
+      terraform-version: '1.5.7'
