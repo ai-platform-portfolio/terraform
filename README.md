@@ -5,7 +5,7 @@ Reusable infrastructure modules. Deployments and Terraform state belong in the
 
 | Module | Purpose |
 | --- | --- |
-| [network](modules/azure/network) | VNet, named subnets and a dedicated NSG per subnet |
+| [network](modules/azure/network) | VNet, named subnets, NSGs and optional route tables/routes |
 | [aks-cluster](modules/azure/aks-cluster) | Entra-enabled AKS, control-plane identity, node pools and OIDC |
 | [managed-identity](modules/azure/managed-identity) | Workload identities and OIDC federated credentials |
 | [argocd-bootstrap](modules/azure/argocd-bootstrap) | Initial ArgoCD installation through Helm |
