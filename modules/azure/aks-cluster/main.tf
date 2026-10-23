@@ -1,5 +1,6 @@
 terraform {
   required_version = ">= 1.5.0, < 2.0.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -46,6 +47,7 @@ resource "azurerm_kubernetes_cluster" "this" {
     max_pods                     = var.max_pods
     os_disk_size_gb              = var.system_node_pool.os_disk_size_gb
     only_critical_addons_enabled = true
+
     upgrade_settings {
       max_surge = "1"
     }
@@ -91,6 +93,7 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
   os_disk_size_gb       = each.value.os_disk_size_gb
   mode                  = "User"
   tags                  = var.tags
+
   upgrade_settings {
     max_surge = "1"
   }

@@ -1,5 +1,6 @@
 terraform {
   required_version = ">= 1.5.0, < 2.0.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -50,6 +51,7 @@ locals {
         next_hop_in_ip_address = route.next_hop_in_ip_address
       }
     }
+
   ]...)
 }
 
