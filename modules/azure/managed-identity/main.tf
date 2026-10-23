@@ -1,5 +1,6 @@
 terraform {
   required_version = ">= 1.5.0, < 2.0.0"
+
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
@@ -14,6 +15,7 @@ resource "azurerm_user_assigned_identity" "this" {
   location            = var.location
   tags                = var.tags
 }
+
 resource "azurerm_federated_identity_credential" "this" {
   for_each            = var.federated_credentials
   name                = each.key
