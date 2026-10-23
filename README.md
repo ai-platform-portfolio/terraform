@@ -1,17 +1,20 @@
 # Terraform module library
 
-Reusable infrastructure modules. Deployments and Terraform state belong in the
-[bootstrap repository](https://github.com/ai-platform-portfolio/bootstrap).
+Reusable infrastructure modules. The management deployment root lives in
+[gitops/bootstrap](https://github.com/ai-platform-portfolio/gitops/tree/main/bootstrap).
+Its state uses an external Azure Blob backend. Subsequent clusters have separate
+deployment roots; this module library does not own deployment state.
 
 | Module | Purpose |
 | --- | --- |
 | [network](modules/azure/network) | VNet, named subnets, NSGs and optional route tables/routes |
 | [aks-cluster](modules/azure/aks-cluster) | Entra-enabled AKS, control-plane identity, node pools and OIDC |
-| [managed-identity](modules/azure/managed-identity) | Workload identities and OIDC federated credentials |
+| [managed-identity](modules/azure/managed-identity) | Workload identities, OIDC federated credentials and scoped role assignments |
 | [argocd-bootstrap](modules/azure/argocd-bootstrap) | Initial ArgoCD installation through Helm |
 
-Azure modules live under `modules/azure/<name>/`. Key Vault, storage and DNS
-modules will be added when their consumers are implemented.
+Azure modules live under `modules/azure/<name>/`. Key Vault, storage-account and
+DNS-zone modules are future extensions. The current management deployment uses
+existing Azure services and manages its disposable application containers directly.
 
 Consumers pin a full Git commit, for example:
 
