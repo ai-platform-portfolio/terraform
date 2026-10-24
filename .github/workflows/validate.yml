@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   validate:
-    uses: ai-platform-portfolio/ops-shared/.github/workflows/validate.yml@df8078a529c4fc8ffc8611f34ed0e416d4e3b999
+    uses: ai-platform-portfolio/ops-shared/.github/workflows/validate.yml@ddf62422874ebe80765bb7535ed71d8220c92818
     with:
       terraform-directories: '["modules/*/*"]'
       terraform-version: '1.5.7'
