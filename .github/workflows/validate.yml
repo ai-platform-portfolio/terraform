@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   validate:
-    uses: ai-platform-portfolio/ops-shared/.github/workflows/validate.yml@1afa38fcafcad127abfeef380b55b12afdfda411
+    uses: ai-platform-portfolio/ops-shared/.github/workflows/validate.yml@df8078a529c4fc8ffc8611f34ed0e416d4e3b999
     with:
-      terraform-directories: '["modules/azure/network", "modules/azure/aks-cluster", "modules/azure/managed-identity", "modules/azure/entra-group", "modules/azure/argocd-bootstrap"]'
+      terraform-directories: '["modules/*/*"]'
       terraform-version: '1.5.7'

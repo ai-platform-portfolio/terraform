@@ -35,3 +35,6 @@ module "network" {
 Provider configurations belong in callers. This repo never applies infrastructure.
 Run `terraform fmt -check -recursive .` and `terraform init -backend=false` /
 `terraform validate` in each module. CI performs these checks without Azure access.
+
+CI discovers `modules/*/*` through the shared validation workflow, so new modules
+are included without editing a directory list.
