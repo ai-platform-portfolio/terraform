@@ -7,3 +7,5 @@ a `README.md` documenting usage, inputs, outputs, and production considerations.
 
 Deployment-specific configuration belongs in the
 [GitOps bootstrap root](https://github.com/ai-platform-portfolio/gitops/tree/main/bootstrap).
+
+- [Entra application](entra-application/README.md): application, service principal and workload federation for OIDC clients.
