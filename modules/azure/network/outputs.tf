@@ -8,6 +8,7 @@ output "subnet_ids" {
   value       = { for name, subnet in azurerm_subnet.this : name => subnet.id }
   depends_on = [
     azurerm_subnet_network_security_group_association.this,
+    azurerm_network_security_rule.this,
     azurerm_subnet_route_table_association.this,
     azurerm_route.this,
   ]
