@@ -1,6 +1,6 @@
 # network
 
-Creates a virtual network, named subnets, an NSG per subnet, and optional route tables, routes and subnet associations. NSGs use Azure default rules; private endpoints and DNS links are future extensions. No firewall or hub DNS proxy is created.
+Creates a virtual network, named subnets, an NSG per subnet, and optional route tables, routes and subnet associations. NSGs retain Azure default rules and accept optional per-subnet `security_rules`; private endpoints and DNS links are future extensions. No firewall or hub DNS proxy is created.
 
 ## Usage
 
@@ -16,6 +16,36 @@ module "network" {
   }
 }
 ```
+
+## Optional security rules
+
+Each subnet accepts a `security_rules` map keyed by Azure rule name. Omitting it
+creates no custom rules. Rules are separate resources; removing a map entry plans
+its deletion. Do not also manage these rules inline on the same NSG.
+
+For a subnet hosting public HTTP/S ingress, add this inside its subnet object:
+
+```hcl
+security_rules = {
+  public-web = {
+    description                = "Allow public HTTP/S load balancer traffic"
+    priority                   = 100
+    direction                  = "Inbound"
+    access                     = "Allow"
+    protocol                   = "Tcp"
+    source_port_range          = "*"
+    destination_port_ranges    = ["80", "443"]
+    source_address_prefix      = "Internet"
+    destination_address_prefix = "*"
+  }
+}
+```
+
+Subnet and NIC NSGs both filter traffic. An AKS-managed NIC rule cannot override
+a subnet NSG's default inbound deny. Permit only the service ports required by
+that deployment; keep AKS-managed NIC filtering in place. Rule priorities must be
+unique within each NSG and direction. Consumers of `subnet_ids` wait for configured
+security rules as well as routing and NSG associations.
 
 ## Optional routing and naming overrides
 
