@@ -110,3 +110,9 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "container_registries" {
+  description = "Existing registry resource IDs keyed by purpose; grants AcrPull to the AKS-managed kubelet identity."
+  type        = map(string)
+  default     = {}
+}

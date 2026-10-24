@@ -59,3 +59,17 @@ Object field definitions are documented in `variables.tf`.
 | `kubelet_identity` | AKS kubelet identity. |
 | `host` | Sensitive Kubernetes API endpoint, after node pool provisioning. |
 | `cluster_ca_certificate` | Sensitive decoded CA certificate, after node pool provisioning. |
+
+## Existing container registries
+
+Set `container_registries` to a map of existing registry ARM IDs. The module grants
+its AKS-managed kubelet identity `AcrPull` at each registry scope, without creating
+another identity or a registry password. An empty map creates no assignments.
+This uses registry-level RBAC; registries configured for ABAC repository permissions
+require the corresponding repository role instead of `AcrPull`.
+
+```hcl
+container_registries = {
+  platform = data.azurerm_container_registry.platform.id
+}
+```

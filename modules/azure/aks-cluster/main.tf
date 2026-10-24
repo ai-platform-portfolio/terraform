@@ -98,3 +98,12 @@ resource "azurerm_kubernetes_cluster_node_pool" "this" {
     max_surge = "1"
   }
 }
+
+# Registry authentication belongs to kubelet, not the control-plane or pod identity.
+resource "azurerm_role_assignment" "registry_pull" {
+  for_each             = var.container_registries
+  scope                = each.value
+  role_definition_name = "AcrPull"
+  principal_id         = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
+  principal_type       = "ServicePrincipal"
+}
