@@ -9,6 +9,7 @@ deployment roots; this module library does not own deployment state.
 | --- | --- |
 | [network](modules/azure/network) | VNet, named subnets, NSGs and optional route tables/routes |
 | [aks-cluster](modules/azure/aks-cluster) | Entra-enabled AKS, control-plane identity, node pools and OIDC |
+| [entra-group](modules/azure/entra-group) | Entra security groups with explicit owners/members and optional scoped Azure roles |
 | [managed-identity](modules/azure/managed-identity) | Workload identities, OIDC federated credentials and scoped role assignments |
 | [argocd-bootstrap](modules/azure/argocd-bootstrap) | Initial ArgoCD installation through Helm |
 
