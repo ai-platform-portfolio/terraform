@@ -18,6 +18,17 @@ variable "address_space" {
   type        = list(string)
 }
 
+variable "private_dns_zone_links" {
+  description = "Optional links from this VNet to caller-owned private DNS zones, keyed by a stable logical name."
+  type = map(object({
+    name                  = string
+    resource_group_name   = string
+    private_dns_zone_name = string
+    registration_enabled  = optional(bool, false)
+  }))
+  default = {}
+}
+
 variable "subnets" {
   description = "Subnets keyed by Azure subnet name."
   type = map(object({
