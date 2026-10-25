@@ -1,6 +1,13 @@
 # aks-cluster
 
-Creates AKS with Entra group-based Kubernetes RBAC, disabled local accounts, a user-assigned control-plane identity, subnet-scoped Network Contributor roles, system and optional application pools, OIDC and workload identity. Azure CNI overlay and max_pods=110 avoid allocating one VNet address per pod. API access requires explicit CIDRs. The system pool is tainted; supply a user pool for applications. The caller needs role-assignment permissions. Free tier and one system node are portfolio simplifications; production requires appropriate replicas, zones, SLA and upgrade capacity. Service/pod ranges must not overlap connected networks.
+Creates AKS with Entra group-based Kubernetes RBAC by default, disabled local accounts, a user-assigned control-plane identity, subnet-scoped Network Contributor roles, system and optional application pools, OIDC and workload identity. Azure CNI overlay and max_pods=110 avoid allocating one VNet address per pod. API access requires explicit CIDRs. The system pool is tainted; supply a user pool for applications. The caller needs role-assignment permissions. Free tier and one system node are portfolio simplifications; production requires appropriate replicas, zones, SLA and upgrade capacity. Service/pod ranges must not overlap connected networks.
+
+Set `azure_rbac_enabled = true` for clusters whose onboarding identities receive
+`Azure Kubernetes Service RBAC Cluster Admin` at the new AKS resource scope.
+This changes authorization for Entra principals; do not toggle it on an existing
+cluster without reviewing its Kubernetes RoleBindings and Azure assignments.
+Service accounts inside the cluster continue using Kubernetes RBAC. The default
+`false` preserves the management cluster's current authorisation mode.
 
 ## Usage
 
