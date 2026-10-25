@@ -38,6 +38,12 @@ variable "admin_group_object_ids" {
   }
 }
 
+variable "azure_rbac_enabled" {
+  description = "Use Azure RBAC for Entra-authenticated Kubernetes users and workload identities. Existing callers retain Kubernetes RBAC by default."
+  type        = bool
+  default     = false
+}
+
 variable "authorized_ip_ranges" {
   description = "CIDRs allowed to access the public AKS API, including the deployment runner."
   type        = list(string)
