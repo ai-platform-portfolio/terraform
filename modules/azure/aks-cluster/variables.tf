@@ -116,3 +116,13 @@ variable "container_registries" {
   type        = map(string)
   default     = {}
 }
+
+variable "fleet_membership" {
+  description = "Optional enrollment in an existing Azure Kubernetes Fleet Manager, owned by this cluster root."
+  type = object({
+    fleet_id = string
+    name     = string
+    group    = string
+  })
+  default = null
+}

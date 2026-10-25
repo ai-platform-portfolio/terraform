@@ -31,3 +31,8 @@ output "cluster_ca_certificate" {
   sensitive   = true
   depends_on  = [azurerm_kubernetes_cluster_node_pool.this]
 }
+
+output "fleet_membership_id" {
+  description = "Fleet membership resource ID, or null when enrollment is disabled."
+  value       = try(azurerm_kubernetes_fleet_member.this["this"].id, null)
+}

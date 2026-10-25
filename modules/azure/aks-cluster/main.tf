@@ -107,3 +107,14 @@ resource "azurerm_role_assignment" "registry_pull" {
   principal_id         = azurerm_kubernetes_cluster.this.kubelet_identity[0].object_id
   principal_type       = "ServicePrincipal"
 }
+
+# Referencing AKS establishes create-after-cluster and detach-before-delete order.
+# One cluster root owns its own membership, even when the fleet is in another root.
+resource "azurerm_kubernetes_fleet_member" "this" {
+  for_each = var.fleet_membership == null ? {} : { this = var.fleet_membership }
+
+  name                  = each.value.name
+  kubernetes_fleet_id   = each.value.fleet_id
+  kubernetes_cluster_id = azurerm_kubernetes_cluster.this.id
+  group                 = each.value.group
+}

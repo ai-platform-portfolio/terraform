@@ -11,6 +11,7 @@ deployment roots; this module library does not own deployment state.
 | [aks-cluster](modules/azure/aks-cluster) | Entra-enabled AKS, control-plane identity, node pools and OIDC |
 | [entra-application](modules/azure/entra-application) | Entra OIDC/OAuth clients and APIs, app roles, consent, federation and scoped Azure access |
 | [entra-group](modules/azure/entra-group) | Entra security groups with explicit owners/members and optional scoped Azure roles |
+| [kubernetes-fleet-manager](modules/azure/kubernetes-fleet-manager) | Hubless fleet for AKS inventory and multi-cluster upgrade orchestration |
 | [managed-identity](modules/azure/managed-identity) | Workload identities, OIDC federated credentials and scoped role assignments |
 | [argocd-bootstrap](modules/azure/argocd-bootstrap) | Initial ArgoCD installation through Helm |
 
