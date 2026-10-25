@@ -1,12 +1,16 @@
 # Private Microsoft Foundry inference
 
 Creates an AIServices account with project management enabled, parameterized model
-deployments and projects, a private endpoint and account-scoped inference RBAC. The caller owns
+deployments and projects, a private endpoint and optional account-scoped inference RBAC. The caller owns
 the resource group, shared user-assigned identity, subnet, NSG and private DNS.
 No account keys are output. The defaults disable local authentication and public
 access, deny public network traffic, and use a user-assigned identity. Account,
 network ACL, identity, private endpoint and RBAC settings are exposed as inputs;
 review any override that weakens these defaults.
+
+Set `inference_principal_id` to create the account-scoped inference assignment.
+Leave it unset if a GitOps identity controller owns that assignment; do not let
+two controllers manage the same Azure role grant.
 
 Supply all three Foundry private DNS zones: `privatelink.openai.azure.com`,
 `privatelink.cognitiveservices.azure.com` and `privatelink.services.ai.azure.com`.
