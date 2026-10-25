@@ -116,6 +116,7 @@ resource "azurerm_cognitive_deployment" "this" {
 }
 
 resource "azurerm_role_assignment" "inference" {
+  count                            = var.inference_principal_id == null ? 0 : 1
   scope                            = azurerm_cognitive_account.this.id
   role_definition_name             = var.inference_role_name
   principal_id                     = var.inference_principal_id
