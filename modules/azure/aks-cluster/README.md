@@ -73,3 +73,32 @@ container_registries = {
   platform = data.azurerm_container_registry.platform.id
 }
 ```
+
+## Automatic Fleet enrollment
+
+Set `fleet_membership` when creating a cluster to enroll it automatically:
+
+```hcl
+fleet_membership = {
+  fleet_id = module.fleet.id
+  name     = "management"
+  group    = "management"
+}
+```
+
+The default `null` creates no membership and preserves existing callers. Each
+cluster root owns its own membership. For a fleet owned in a different root,
+supply its ARM ID from deployment automation rather than creating a second fleet.
+The fleet and member can be in different regions or subscriptions in the same
+Entra tenant. Cross-subscription enrollment requires the caller's Azure RBAC
+permissions on both resources.
+
+Terraform creates membership after AKS and removes it before deleting AKS.
+Enrollment does not install GitOps packages, move workloads or start an upgrade.
+The `group` is an update-ring label; it has no execution effect without an update
+strategy and run. No upgrade policy is created here. Keep the shared fleet alive
+until every cluster root has detached its membership.
+
+`fleet_membership_id` is the member resource ID, or `null` without enrollment.
+Changing the member name, fleet or cluster recreates the membership, not AKS.
+Do not also declare the same membership in another module, ASO or Crossplane.
