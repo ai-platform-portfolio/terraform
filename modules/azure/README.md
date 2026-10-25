@@ -10,4 +10,6 @@ Deployment-specific configuration belongs in the
 
 - [Entra application](entra-application/README.md): application, service principal and workload federation for OIDC clients.
 
+- [Foundry](foundry/README.md): private AI Services account, projects, model deployments and inference RBAC.
+
 - [Kubernetes Fleet Manager](kubernetes-fleet-manager/README.md): shared hubless fleet; cluster roots own their memberships through the AKS module.
