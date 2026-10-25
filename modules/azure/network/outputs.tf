@@ -12,6 +12,7 @@ output "subnet_ids" {
   description = "Subnet resource IDs keyed by name, after NSG/routing configuration."
   value       = { for name, subnet in azurerm_subnet.this : name => subnet.id }
   depends_on = [
+    azurerm_network_security_rule.this,
     azurerm_subnet_network_security_group_association.this,
     azurerm_subnet_route_table_association.this,
     azurerm_route.this,

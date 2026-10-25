@@ -44,6 +44,42 @@ resource "azurerm_network_security_group" "this" {
   tags                = var.tags
 }
 
+locals {
+  security_rules = merge([
+    for subnet_key, subnet in var.subnets : {
+      for rule_key, rule in subnet.security_rules : jsonencode([subnet_key, rule_key]) => {
+        subnet_key                 = subnet_key
+        name                       = rule_key
+        description                = rule.description
+        priority                   = rule.priority
+        direction                  = rule.direction
+        access                     = rule.access
+        protocol                   = rule.protocol
+        source_port_range          = rule.source_port_range
+        destination_port_ranges    = rule.destination_port_ranges
+        source_address_prefix      = rule.source_address_prefix
+        destination_address_prefix = rule.destination_address_prefix
+      }
+    }
+  ]...)
+}
+
+resource "azurerm_network_security_rule" "this" {
+  for_each                    = local.security_rules
+  name                        = each.value.name
+  description                 = each.value.description
+  priority                    = each.value.priority
+  direction                   = each.value.direction
+  access                      = each.value.access
+  protocol                    = each.value.protocol
+  source_port_range           = each.value.source_port_range
+  destination_port_ranges     = each.value.destination_port_ranges
+  source_address_prefix       = each.value.source_address_prefix
+  destination_address_prefix  = each.value.destination_address_prefix
+  resource_group_name         = var.resource_group_name
+  network_security_group_name = azurerm_network_security_group.this[each.value.subnet_key].name
+}
+
 resource "azurerm_subnet_network_security_group_association" "this" {
   for_each                  = var.subnets
   subnet_id                 = azurerm_subnet.this[each.key].id
