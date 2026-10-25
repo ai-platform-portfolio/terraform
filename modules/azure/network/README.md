@@ -1,6 +1,6 @@
 # network
 
-Creates a virtual network, named subnets, an NSG per subnet, and optional route tables, routes, subnet associations and links to caller-owned private DNS zones. NSGs use Azure default rules. The module does not create private endpoints, DNS zones, a firewall or a hub DNS proxy.
+Creates a virtual network, named subnets, an NSG per subnet, and optional NSG rules, route tables, routes, subnet associations and links to caller-owned private DNS zones. NSGs use Azure default rules when no rules are supplied. The module does not create private endpoints, DNS zones, a firewall or a hub DNS proxy.
 
 ## Usage
 
@@ -53,6 +53,10 @@ creating a route table alone does not change the cluster's outbound mode.
 
 Override a single NSG's full name with `network_security_group_name` inside its
 subnet object. Otherwise its name uses the configurable prefix plus the subnet key.
+Set `security_rules` in a subnet object to create named rules in its NSG; rules
+are separate resources, and the default is an empty map. For public services,
+declare the intended inbound ports explicitly so the default deny rule does not
+block their LoadBalancer traffic.
 All routing and naming defaults live in `variables.tf`. Terraform provider source
 and version constraints are static Terraform requirements, not module inputs.
 
