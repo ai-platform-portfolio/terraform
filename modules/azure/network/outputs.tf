@@ -3,6 +3,11 @@ output "vnet_id" {
   value       = azurerm_virtual_network.this.id
 }
 
+output "private_dns_zone_link_ids" {
+  description = "Private DNS VNet link IDs keyed by logical name."
+  value       = { for name, link in azurerm_private_dns_zone_virtual_network_link.this : name => link.id }
+}
+
 output "subnet_ids" {
   description = "Subnet resource IDs keyed by name, after NSG/routing configuration."
   value       = { for name, subnet in azurerm_subnet.this : name => subnet.id }

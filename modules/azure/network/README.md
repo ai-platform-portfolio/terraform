@@ -1,6 +1,6 @@
 # network
 
-Creates a virtual network, named subnets, an NSG per subnet, and optional route tables, routes and subnet associations. NSGs use Azure default rules; private endpoints and DNS links are future extensions. No firewall or hub DNS proxy is created.
+Creates a virtual network, named subnets, an NSG per subnet, and optional route tables, routes, subnet associations and links to caller-owned private DNS zones. NSGs use Azure default rules. The module does not create private endpoints, DNS zones, a firewall or a hub DNS proxy.
 
 ## Usage
 
@@ -56,6 +56,23 @@ subnet object. Otherwise its name uses the configurable prefix plus the subnet k
 All routing and naming defaults live in `variables.tf`. Terraform provider source
 and version constraints are static Terraform requirements, not module inputs.
 
+## Private DNS links
+
+Pass existing or separately managed zone names and their resource groups to
+`private_dns_zone_links`. The module owns each link to its VNet; the caller owns
+each zone, so multiple networks can link the same zone without competing over its
+lifecycle. Registration defaults to disabled for private endpoint zones.
+
+```hcl
+private_dns_zone_links = {
+  openai = {
+    name                  = "management"
+    resource_group_name   = "rg-management"
+    private_dns_zone_name = "privatelink.openai.azure.com"
+  }
+}
+```
+
 ## Inputs
 
 | Name | Type | Default | Description |
@@ -64,6 +81,7 @@ and version constraints are static Terraform requirements, not module inputs.
 | `location` | `string` | required | Azure region. |
 | `resource_group_name` | `string` | required | Existing resource group. |
 | `address_space` | `list(string)` | required | VNet address ranges. |
+| `private_dns_zone_links` | `map(object)` | `{}` | Optional links to caller-owned private DNS zones. |
 | `subnets` | `map(object)` | required | Subnets keyed by Azure subnet name. |
 | `network_security_group_name_prefix` | `string` | `"nsg-"` | Default NSG name prefix. Per-subnet names take precedence. |
 | `route_tables` | `map(object)` | `{}` | Named tables with optional Azure names, BGP propagation and named routes. |
@@ -77,6 +95,7 @@ Object field definitions are documented in `variables.tf`.
 | Name | Description |
 | --- | --- |
 | `vnet_id` | Virtual network resource ID. |
+| `private_dns_zone_link_ids` | Private DNS VNet link IDs keyed by logical name. |
 | `subnet_ids` | Subnet resource IDs keyed by name, after NSG/routing configuration. |
 | `route_table_ids` | Route table resource IDs keyed by logical name. |
 | `network_security_group_ids` | NSG resource IDs keyed by subnet name. |
