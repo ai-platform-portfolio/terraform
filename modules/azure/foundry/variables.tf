@@ -55,7 +55,6 @@ variable "inference_principal_id" {
   description = "Optional existing principal for an account-scoped inference role; leave null when another owner manages inference RBAC."
   type        = string
   default     = null
-  sensitive   = true
 }
 
 variable "inference_role_name" {
