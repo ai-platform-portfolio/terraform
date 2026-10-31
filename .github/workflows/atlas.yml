@@ -28,4 +28,4 @@ jobs:
           git diff --exit-code -- atlas
 
       - name: Test on disposable PostgreSQL
-        run: bash atlas/test.sh
+        run: bash atlas/postgres/tests/test.sh
