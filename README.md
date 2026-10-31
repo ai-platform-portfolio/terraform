@@ -1,4 +1,4 @@
-# Terraform module library
+# Infrastructure and database library
 
 Reusable infrastructure modules. The management deployment root lives in
 [gitops/bootstrap](https://github.com/ai-platform-portfolio/gitops/tree/main/bootstrap).
@@ -41,3 +41,8 @@ Run `terraform fmt -check -recursive .` and `terraform init -backend=false` /
 
 CI discovers `modules/*/*` through the shared validation workflow, so new modules
 are included without editing a directory list.
+
+Native [Atlas PostgreSQL configuration](atlas/README.md) lives beside the
+Terraform modules under `atlas/`. It is consumed by Atlas, outside Terraform
+state and Atlantis. Application schemas remain in their application repositories;
+the repository name is unchanged for now.

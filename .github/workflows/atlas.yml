@@ -1,0 +1,31 @@
+name: Validate Atlas
+
+on:
+  pull_request:
+    paths: ['atlas/**', '.github/workflows/atlas.yml']
+  push:
+    branches: [main]
+    paths: ['atlas/**', '.github/workflows/atlas.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ariga/setup-atlas@2f3c785c89a15e1c0d07bcae3900fb5feb969eea # v0
+        with:
+          version: v1.3.6
+          cloud-token: ${{ secrets.ATLAS_TOKEN }}
+
+      - name: Check HCL formatting
+        run: |
+          atlas schema fmt atlas
+          git diff --exit-code -- atlas
+
+      - name: Test on disposable PostgreSQL
+        run: bash atlas/test.sh
