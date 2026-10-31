@@ -1,15 +1,13 @@
 # PostgreSQL roles
 
-Reusable native Atlas configuration, arranged like the other modules:
-`main.hcl` contains the environment/loop, `variables.hcl` declares inputs, and
-`lint.hcl` loads the shared `roles.rule.hcl` CI policy. Usage is documented here;
-`tests/` contains validation fixtures rather than a separate examples directory.
+Shared native Atlas configuration for one caller's PostgreSQL roles. Like the
+Terraform modules, `main.hcl` contains the configuration and `variables.hcl`
+declares its inputs. The caller owns deployment choices and repetition.
 
 ## Usage
 
-Check out the library at a full Git commit alongside the application repository.
-The application keeps its own `atlas.hcl` consumer configuration and `schema/`
-files. For example, in the application's `atlas.hcl`:
+Pin a checkout of this library to a full Git commit. Keep the application's
+schema alongside its code. Supply inputs in the application's `atlas.hcl`:
 
 ```hcl
 atlas {
@@ -18,27 +16,26 @@ atlas {
   }
 }
 
-variable "targets" {
-  type = map(object({
-    schema_dir = string
-    role_names = list(string)
-    passwords  = map(string)
-  }))
+variable "schema_dir" {
+  type    = string
+  default = "schema"
+}
 
+variable "role_names" {
+  type    = list(string)
+  default = ["orders_owner", "orders_migrator", "orders_app"]
+}
+
+variable "passwords" {
+  type = map(string)
   default = {
-    orders = {
-      schema_dir = "schema"
-      role_names = ["orders_owner", "orders_migrator", "orders_app"]
-      passwords = {
-        migrator = getenv("ORDERS_MIGRATOR_PASSWORD")
-        runtime  = getenv("ORDERS_RUNTIME_PASSWORD")
-      }
-    }
+    migrator = getenv("ORDERS_MIGRATOR_PASSWORD")
+    runtime  = getenv("ORDERS_RUNTIME_PASSWORD")
   }
 }
 ```
 
-Keep schema input declarations in `schema/variables.pg.hcl`:
+Keep schema inputs in `schema/variables.pg.hcl`:
 
 ```hcl
 variable "passwords" {
@@ -46,7 +43,7 @@ variable "passwords" {
 }
 ```
 
-Put the application's related resources in `schema/main.pg.hcl`:
+Keep related resources in `schema/main.pg.hcl`:
 
 ```hcl
 role "orders_owner" {}
@@ -61,123 +58,67 @@ user "orders_app" {
 }
 ```
 
-The owner cannot log in; the migrator inherits ownership-group membership; the
-runtime user has no ownership membership. Add any number of literal role/user
-blocks and password-map entries; there are no fixed migrator/runtime inputs in
-the shared library. Split related schema resources into additional `.pg.hcl`
-files in the same directory as needed. Atlas loads that directory together.
+Add the role/user blocks and password entries the application needs. The library
+has no fixed role count or named migrator/runtime inputs. Atlas role names remain
+literal HCL labels; `name` does not override them. Repeated callers belong in the
+consuming delivery configuration, following the caller-owned repetition used by
+`gitops/bootstrap`. This module contains no multi-application dispatcher.
 
-These roles do not have administrative privileges. This module does not create
-a database, assign database/object ownership, grant runtime access or apply
-application migrations. Membership alone does not make objects created by the
-migrator belong to the owner role; migrations must use the intended ownership
-identity. Database access and cross-database isolation need integration tests.
-
-## Multiple targets and inputs
-
-Add entries to `targets` for more applications/previews on the shared server.
-The native environment uses `for_each` over the map's keys; each target supplies
-its own schema directory, exact role names and password map. Keep role scopes
-disjoint on the same server. New environments/servers use their own connection
-and caller configuration, like separate Terraform deployment roots.
-
-Atlas v1.3.6 requires a set of keys for this loop; a map of objects directly is
-unsupported. Role/user names remain literal HCL block labels: a role's `name`
-attribute does not override its label. This loop repeats scoped environments,
-not dynamically named SQL role blocks. That is the explicit-name tradeoff agreed
-for native HCL; adding a SQL/HCL templating layer is a separate decision.
-
-| Input | Purpose |
-| --- | --- |
-| `targets` | Required map of schema directories, role-name lists and secret maps |
-| `target` | Optional map key to select one target; empty processes all on apply |
-| `role_url` | Shared role-manager URL; defaults to secret-delivered `ATLAS_ROLE_URL` |
-| `dev_url` | Dedicated disposable dev instance; defaults to `ATLAS_DEV_URL` |
-| `policy_file` | Rule-file path supplied when loading the CI lint overlay |
-
-Install Atlas **v1.3.6**, authenticate to the Atlas Pro organization and start
-Docker. From the application directory, load library inputs and main configuration
-before the caller's configuration (replace `../library` with your pinned checkout):
+Use Atlas **v1.3.6** and authenticate to the Atlas Pro organization. Run from the
+application directory, replacing `../library` with your pinned checkout:
 
 ```sh
 export ATLAS_DEV_URL=docker://postgres/18.6/dev
-atlas schema validate --env roles --config file://../library/atlas/postgres/variables.hcl,file://../library/atlas/postgres/main.hcl,file://atlas.hcl --var target=orders
-atlas schema test --env roles --config file://../library/atlas/postgres/variables.hcl,file://../library/atlas/postgres/main.hcl,file://atlas.hcl --var target=orders ./tests
-atlas schema lint --env roles --config file://../library/atlas/postgres/variables.hcl,file://../library/atlas/postgres/main.hcl,file://atlas.hcl,file://../library/atlas/postgres/lint.hcl --var policy_file=../library/atlas/postgres/roles.rule.hcl --var target=orders
+atlas schema validate --env roles --config file://../library/atlas/postgres/variables.hcl,file://../library/atlas/postgres/main.hcl,file://atlas.hcl
+atlas schema lint --env roles --config file://../library/atlas/postgres/variables.hcl,file://../library/atlas/postgres/main.hcl,file://atlas.hcl,file://../library/atlas/postgres/lint.hcl --var policy_file=../library/atlas/postgres/roles.rule.hcl
 ```
 
-Validate/lint/test accept one environment, so select a target when the map has
-multiple entries. Apply supports the complete native loop; use `target` to limit
-it when required. Invalid target keys are rejected rather than silently doing
-nothing. Keep application schema tests with the application.
-
-Unset `ATLAS_DEV_URL` for role/password apply. Role-only mode needs no dev DB.
-Never share a dev PostgreSQL instance with deployment databases: roles are
+All paths resolve from the working directory. Keep schema tests in the application.
+Use a separate disposable PostgreSQL instance for dev/tests, since roles are
 instance-wide. Supply `ATLAS_ROLE_URL` through secret delivery using a direct TLS
-connection, not a transaction-mode pooler. Validation/tests need no deployment
-URL. All paths resolve from the working directory.
+connection, not a transaction-mode pooler. Unset `ATLAS_DEV_URL` for role apply.
 
-## Scope and safety
+## Inputs
 
-Only the exact `targets[*].role_names` are included; empty lists, wildcard patterns and
-overlong names are rejected. Permissions are disabled. Unlisted roles, schemas,
-tables and grants are outside this environment’s ownership. Keep the scope stable:
-removing a name from it relinquishes management rather than deleting that role.
-Removing a role from HCL while keeping its name in scope can plan its deletion.
-Review SQL before applying and handle database dependencies explicitly.
+| Name | Type | Default | Purpose |
+| --- | --- | --- | --- |
+| `schema_dir` | string | required | Caller-owned native schema directory |
+| `role_names` | list(string) | required | Exact role ownership scope |
+| `passwords` | map(string) | `{}` | Secret values referenced by the schema |
+| `role_url` | string | `ATLAS_ROLE_URL` | Role-manager connection |
+| `dev_url` | string | `ATLAS_DEV_URL` | Disposable dev/test connection |
+| `policy_file` | string | empty | Rule path when loading `lint.hcl` |
 
-The separate lint overlay rejects SUPERUSER, CREATEDB, CREATEROLE, replication and
-RLS bypass attributes in roles and users. It is a desired-state CI check, not a
-deployment approval or deletion guard. Password management is explicitly enabled
-through `sensitive = ALLOW`; credentials come from environment
-variables and must not be committed. The application overlay pins the Atlas Cloud
-organization so an absent/wrong login fails.
+Empty/wildcard/overlong role names and empty password values are rejected.
+The exact scope protects unlisted roles; schemas, objects and grants are disabled.
+Keep scope names stable: removing a name relinquishes management; removing its
+HCL definition while retaining its scope can plan deletion. Review SQL before apply.
+The shared native lint policy rejects administrative role/user attributes in CI.
 
-Two acceptance-test findings affect delivery design. With plaintext passwords,
-dev-database lint simulation of `schema apply` reports a planned-state mismatch
-(observed on v1.3.0 and v1.3.6). Therefore the library keeps native schema lint in
-CI and performs role-only apply without a dev database or that lint overlay.
-Do not claim a runtime lint/review gate is enabled here. Protected deployment
-approval is still work for the operator integration.
+## Validation and limits
 
-Atlas also plans to reapply supplied passwords when a restricted CREATEROLE
-account cannot inspect their stored verifiers. Reapplying the same password
-keeps the login credential stable, but is **not an empty SQL plan**. Stored SCRAM
-verifiers produced an empty replan with a superuser, but not with the restricted
-account; this library does not grant password-catalog access to obtain that.
-Operator drift/reconcile behavior and deployment approvals must be tested before
-adopting the library in the cluster. No new hash-generation/secret-storage flow
-is introduced by this PR.
+Run `bash atlas/postgres/tests/test.sh` from the repository root with Docker and
+Atlas Pro authentication. It calls the same module independently for two consumers,
+runs five native SQL assertions for each, rejects unsafe attributes/scopes, and
+checks restricted CREATEROLE apply preserves both consumers and unrelated objects.
+Both runtime logins are tested before and after repeated apply. The small Bash
+harness coordinates Atlas/Docker/PostgreSQL; no additional test language is needed.
+CI requires the bot token as Actions secret `ATLAS_TOKEN`.
 
-## Validation and delivery boundary
+Measured on v1.3.6: password-bearing dev lint simulation of schema apply reports a
+planned-state mismatch, so desired-state policy lint runs separately in CI and
+role apply runs without the dev database/lint overlay. No runtime approval gate
+is claimed. The restricted role manager also reapplies supplied passwords because
+it cannot compare stored verifiers. Credentials remain valid; repeat SQL plans
+are not empty. No password-catalog access is granted to avoid these writes.
 
-From the repository root, `bash atlas/postgres/tests/test.sh` runs native Atlas SQL assertions,
-rejects unsafe scope inputs, applies to a separate disposable server containing
-unrelated objects, and checks those survive. It uses a restricted CREATEROLE
-login for apply, checks that the repeat plan contains only four password
-writes across two targets, and verifies runtime authentication before and after repeated apply.
-It also proves the shared policy rejects elevated role and user attributes. Five native SQL
-assertions run independently for each target.
-The script uses only Bash, Atlas and PostgreSQL’s bundled `psql` through Docker;
-the small shell harness coordinates the real apply rather than replacing Atlas’s
-native test framework. It overwrites deployment URL inputs with its own disposable
-target and removes that container on exit. Test passwords are disposable fixtures.
+The module creates roles only. Database creation, ownership, grants, migrations,
+ordered cleanup and backup/recovery remain separate work. Owner-role membership
+does not automatically set object ownership for a migrator. Existing CNPG-owned
+roles remain outside this scope. The Atlas operator remains the intended runner;
+chart source integration, reconcile/drift and approval acceptance are pending.
+There are no Terraform provider/state or Atlantis schema changes.
 
-The Atlas workflow pins CLI v1.3.6 and requires the Actions secret `ATLAS_TOKEN`
-(an Atlas Pro bot token). Only dev databases run in CI; no cluster, registry
-publication or deployment credentials are involved. Terraform checks continue
-through the existing `ops-shared` workflow. Its current workflows have no Atlas
-support, so this small Atlas-specific job uses the official setup action.
-
-The Kubernetes operator remains the intended deployment runner. This PR supplies
-the authoring/validation library only; the current application Helm chart still
-generates role HCL. A separate PR must connect native sources to the operator,
-including pinned artifacts and secret inputs. There is no Terraform Atlas
-provider/state, Atlantis schema execution, existing-role adoption, automated
-cleanup or rollback implementation here. Keep CNPG-owned roles outside this
-scope. Database creation, ordered cleanup, backup/recovery and versioned
-application migrations remain separate delivery work.
-
-References: [Atlas project configuration](https://atlasgo.io/atlas-schema/projects),
+References: [Atlas configuration](https://atlasgo.io/atlas-schema/projects),
 [native schema tests](https://atlasgo.io/testing/schema),
 [PostgreSQL security as code](https://atlasgo.io/guides/postgres/security-declarative).

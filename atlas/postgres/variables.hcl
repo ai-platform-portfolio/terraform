@@ -1,30 +1,28 @@
-variable "targets" {
-  description = "Role sets keyed by application/environment; each owns its exact role names."
-  type = map(object({
-    schema_dir = string
-    role_names = list(string)
-    passwords  = map(string)
-  }))
+variable "schema_dir" {
+  description = "Caller-owned directory containing related role/user resources and schema inputs."
+  type        = string
+}
+
+variable "role_names" {
+  description = "Exact role names owned by this caller."
+  type        = list(string)
 
   validation {
-    condition = length(var.targets) > 0 && alltrue([
-      for target in values(var.targets) :
-      target.schema_dir != "" && length(target.role_names) > 0 && alltrue([
-        for name in target.role_names : length(regexall("^[a-z][a-z0-9_]{0,62}$", name)) == 1
-      ]) && alltrue([for password in values(target.passwords) : password != ""])
+    condition = length(var.role_names) > 0 && alltrue([
+      for name in var.role_names : length(regexall("^[a-z][a-z0-9_]{0,62}$", name)) == 1
     ])
-    error_message = "Provide targets with schema directories, nonempty secret values and exact role names: lowercase letters, numbers and underscores, starting with a letter, at most 63 characters."
+    error_message = "Provide at least one exact role name: lowercase letters, numbers and underscores, starting with a letter, at most 63 characters."
   }
 }
 
-variable "target" {
-  description = "Select one target for validate/lint/test or scoped apply; empty applies all targets."
-  type        = string
-  default     = ""
+variable "passwords" {
+  description = "Secret-delivered login passwords keyed as referenced by the caller's schema."
+  type        = map(string)
+  default     = {}
 
   validation {
-    condition     = var.target == "" || contains(keys(var.targets), var.target)
-    error_message = "The selected target must exist in targets."
+    condition     = alltrue([for password in values(var.passwords) : password != ""])
+    error_message = "Password entries must have nonempty secret values."
   }
 }
 
