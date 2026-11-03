@@ -9,8 +9,6 @@ terraform {
   }
 }
 
-data "azurerm_client_config" "current" {}
-
 resource "azurerm_postgresql_flexible_server" "this" {
   name                          = var.name
   resource_group_name           = var.resource_group_name
@@ -26,7 +24,7 @@ resource "azurerm_postgresql_flexible_server" "this" {
   authentication {
     active_directory_auth_enabled = true
     password_auth_enabled         = false
-    tenant_id                     = data.azurerm_client_config.current.tenant_id
+    tenant_id                     = var.tenant_id
   }
 }
 
@@ -34,7 +32,7 @@ resource "azurerm_postgresql_flexible_server_active_directory_administrator" "th
   for_each            = var.entra_administrators
   server_name         = azurerm_postgresql_flexible_server.this.name
   resource_group_name = var.resource_group_name
-  tenant_id           = data.azurerm_client_config.current.tenant_id
+  tenant_id           = var.tenant_id
   object_id           = each.value.object_id
   principal_name      = each.value.principal_name
   principal_type      = each.value.principal_type

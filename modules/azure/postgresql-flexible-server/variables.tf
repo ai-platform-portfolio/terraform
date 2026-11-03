@@ -13,6 +13,12 @@ variable "location" {
   type        = string
 }
 
+variable "tenant_id" {
+  description = "Tenant ID from the authenticated caller context."
+  type        = string
+  sensitive   = true
+}
+
 variable "postgres_version" {
   description = "PostgreSQL major version."
   type        = string

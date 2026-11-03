@@ -15,6 +15,7 @@ module "postgres" {
   name                       = var.postgres.name
   resource_group_name        = azurerm_resource_group.this.name
   location                   = var.azure.location
+  tenant_id                  = sensitive(data.azurerm_client_config.current.tenant_id)
   postgres_version           = var.postgres.version
   sku_name                   = var.postgres.sku_name
   storage_mb                 = var.postgres.storage_mb
@@ -33,7 +34,9 @@ module "postgres" {
 }
 ```
 
-The caller should use `privatelink.postgres.database.azure.com` for the private
+The caller reads `data.azurerm_client_config.current` once at the top of its
+`main.tf` and passes the tenant ID to this module. It should use
+`privatelink.postgres.database.azure.com` for the private
 endpoint DNS zone and link that zone to the workload VNet. Public network and
 password authentication are disabled. PostgreSQL clients must request an Entra
 token for the Azure PostgreSQL audience and verify the server's TLS certificate;
