@@ -14,6 +14,7 @@ deployment roots; this module library does not own deployment state.
 | [foundry](modules/azure/foundry) | Private AI Services account, projects, model deployments and inference RBAC |
 | [kubernetes-fleet-manager](modules/azure/kubernetes-fleet-manager) | Hubless fleet for AKS inventory and multi-cluster upgrade orchestration |
 | [managed-identity](modules/azure/managed-identity) | Workload identities, OIDC federated credentials and scoped role assignments |
+| [postgresql-flexible-server](modules/azure/postgresql-flexible-server) | Private Azure PostgreSQL server with Entra-only authentication and administrators |
 | [argocd-bootstrap](modules/azure/argocd-bootstrap) | Initial ArgoCD installation through Helm |
 
 Azure modules live under `modules/azure/<name>/`. Key Vault, storage-account and
