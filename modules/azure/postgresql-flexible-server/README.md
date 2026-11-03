@@ -15,6 +15,7 @@ module "postgres" {
   name                       = var.postgres.name
   resource_group_name        = azurerm_resource_group.this.name
   location                   = var.azure.location
+  zone                       = var.postgres.zone
   tenant_id                  = sensitive(data.azurerm_client_config.current.tenant_id)
   postgres_version           = var.postgres.version
   sku_name                   = var.postgres.sku_name
@@ -36,6 +37,8 @@ module "postgres" {
 
 The caller reads `data.azurerm_client_config.current` once at the top of its
 `main.tf` and passes the tenant ID to this module. It should use
+an explicit availability zone matching the deployed server to keep plans stable,
+and use
 `privatelink.postgres.database.azure.com` for the private
 endpoint DNS zone and link that zone to the workload VNet. Public network and
 password authentication are disabled. PostgreSQL clients must request an Entra

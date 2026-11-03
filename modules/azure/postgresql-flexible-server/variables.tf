@@ -13,6 +13,11 @@ variable "location" {
   type        = string
 }
 
+variable "zone" {
+  description = "Availability zone for the server; set explicitly to preserve a stable plan."
+  type        = string
+}
+
 variable "tenant_id" {
   description = "Tenant ID from the authenticated caller context."
   type        = string
