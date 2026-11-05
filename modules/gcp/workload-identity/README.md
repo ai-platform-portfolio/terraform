@@ -1,30 +1,34 @@
-# Azure managed identity to Google inference
+# Azure-to-Google workload identity federation
 
-Creates an OIDC pool/provider and inference-only Google service account. Trust
-requires the exact Entra issuer, dedicated audience, tenant ID, managed identity
-object ID and application role. The single approved identity may impersonate only
-this account; the custom role grants prediction and API usage, without model,
-network or IAM administration. No keys or passwords are created.
+Creates a Google workload identity pool/provider, a service account, and a
+caller-defined project IAM role. Trust is restricted to an exact Entra issuer,
+audience, tenant, managed identity and application role. That identity may
+impersonate only the created service account. No keys or passwords are created.
 
-The application/audience and role assignment belong to the administrator
-bootstrap. APIM must obtain an Entra token, exchange it using Google STS and use
-IAM Credentials to obtain a short-lived OAuth token. Outputs provide the exact
-exchange metadata for that policy implementation. The federation trust alone
-does not implement APIM token renewal, network reachability or model restrictions.
+The caller supplies `name`, `project_id`, `tenant_id`, `principal_id`, `issuer`,
+`audience`, `role_value` and the role definition:
 
-The prediction permission is project-scoped; enforce the reviewed model and
-processing endpoint allowlist in APIM and validate it at runtime. Project IAM
-alone is not a per-model or jurisdictional routing restriction.
+```hcl
+role = {
+  id          = "objectReader"
+  title       = "Object reader"
+  description = "Read objects in the configured project."
+  permissions = ["storage.objects.get"]
+}
+```
 
-[Google Azure federation](https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-other-clouds),
-[Agent Platform permissions](https://docs.cloud.google.com/gemini-enterprise-agent-platform/machine-learning/general/access-control).
+`name` is the service account ID and the pool name prefix. `provider_id` defaults
+to `azure`. The module does not select application permissions or a target project.
+Custom roles are project-scoped; callers own permission selection and any narrower
+resource, service or application authorisation requirements.
 
-
-This library module is ported for later use by the model gateway. The current
-GitOps bootstrap deploys only the private APIM foundation; it does not consume
-this module or implement Google token exchange/Gemini routing. The intended
-consumer project is selected by the operator, not hardcoded into the library.
+The Entra audience and role assignment are caller-owned prerequisites. Outputs
+provide the provider name, service account email and token-exchange metadata.
+Callers implement Google STS exchange and service-account token acquisition;
+this module does not acquire or renew credentials or configure network access.
 
 Run `terraform init -backend=false`, `terraform validate` and `terraform test`
-with Terraform 1.9+. The existing mocked test checks the exact trust constraints
-and inference permission set; it does not prove a real token exchange.
+with Terraform 1.9+. Mocked tests check the exact identity trust and caller-defined
+role metadata/permissions; they do not prove a real token exchange.
+
+[Google's Azure federation documentation](https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-other-clouds).

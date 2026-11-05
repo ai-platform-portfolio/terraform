@@ -5,7 +5,7 @@ variable "project_id" {
 }
 
 variable "name" {
-  description = "Prefix for the runtime pool and service account."
+  description = "Name for the service account and prefix for the workload identity pool."
   type        = string
 }
 
@@ -22,7 +22,7 @@ variable "principal_id" {
 }
 
 variable "issuer" {
-  description = "Exact issuer of the version 1 Entra token."
+  description = "Exact issuer of the trusted Entra token."
   type        = string
   sensitive   = true
 }
@@ -36,7 +36,6 @@ variable "audience" {
 variable "role_value" {
   description = "Required application role claim."
   type        = string
-  default     = "Federate.Workload"
 }
 
 variable "provider_id" {
@@ -45,14 +44,12 @@ variable "provider_id" {
   default     = "azure"
 }
 
-variable "role_id" {
-  description = "Project custom inference role identifier."
-  type        = string
-  default     = "modelGatewayInference"
-}
-
-variable "inference_permissions" {
-  description = "Permissions required for Gemini content generation and API usage."
-  type        = set(string)
-  default     = ["aiplatform.endpoints.predict", "serviceusage.services.use"]
+variable "role" {
+  description = "Caller-defined project role granted to the federated service account."
+  type = object({
+    id          = string
+    title       = string
+    description = string
+    permissions = set(string)
+  })
 }

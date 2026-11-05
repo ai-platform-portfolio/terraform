@@ -3,7 +3,7 @@ mock_provider "azapi" {}
 
 variables {
   managed_identity_id        = "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/example-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/shared"
-  name                       = "example-model-gateway"
+  name                       = "example-api-management"
   resource_group_name        = "example-rg"
   location                   = "ukwest"
   publisher_name             = "Example publisher"

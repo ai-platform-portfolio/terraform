@@ -72,7 +72,7 @@ variable "tags" {
 }
 
 variable "managed_identity_id" {
-  description = "Shared user-assigned identity owned by the environment, alongside its resource group."
+  description = "Caller-owned user-assigned managed identity resource ID."
   type        = string
 }
 

@@ -11,8 +11,8 @@ deployment roots; this module library does not own deployment state.
 | [aks-cluster](modules/azure/aks-cluster) | Entra-enabled AKS, control-plane identity, node pools and OIDC |
 | [entra-application](modules/azure/entra-application) | Entra OIDC/OAuth clients and APIs, app roles, consent, federation and scoped Azure access |
 | [entra-group](modules/azure/entra-group) | Entra security groups with explicit owners/members and optional scoped Azure roles |
-| [apim](modules/azure/apim) | Private Standard v2 API Management foundation; no inference routes |
-| [gcp/workload-identity](modules/gcp/workload-identity) | Keyless trust from an Azure managed identity to Google inference permissions |
+| [apim](modules/azure/apim) | Private Standard v2 API Management with managed identity and VNet integration |
+| [gcp/workload-identity](modules/gcp/workload-identity) | Keyless Azure-to-Google federation with caller-defined project permissions |
 | [foundry](modules/azure/foundry) | Private AI Services account, projects, model deployments and inference RBAC |
 | [kubernetes-fleet-manager](modules/azure/kubernetes-fleet-manager) | Hubless fleet for AKS inventory and multi-cluster upgrade orchestration |
 | [managed-identity](modules/azure/managed-identity) | Workload identities, OIDC federated credentials and scoped role assignments |

@@ -1,7 +1,11 @@
 terraform {
   required_version = ">= 1.9, < 2.0"
+
   required_providers {
-    google = { source = "hashicorp/google", version = ">= 8.6, < 9.0" }
+    google = {
+      source  = "hashicorp/google"
+      version = ">= 8.6, < 9.0"
+    }
   }
 }
 
@@ -27,8 +31,8 @@ resource "google_iam_workload_identity_pool_provider" "azure" {
 
 resource "google_service_account" "runtime" {
   project      = var.project_id
-  account_id   = "${var.name}-inference"
-  display_name = "${var.name} Agent Platform inference"
+  account_id   = var.name
+  display_name = "${var.name} federated workload"
 }
 
 resource "google_service_account_iam_member" "azure" {
@@ -38,16 +42,16 @@ resource "google_service_account_iam_member" "azure" {
   depends_on         = [google_iam_workload_identity_pool_provider.azure]
 }
 
-resource "google_project_iam_custom_role" "inference" {
+resource "google_project_iam_custom_role" "access" {
   project     = var.project_id
-  role_id     = var.role_id
-  title       = "${var.name} inference"
-  description = "Invoke Agent Platform models without deploying or administering resources."
-  permissions = var.inference_permissions
+  role_id     = var.role.id
+  title       = var.role.title
+  description = var.role.description
+  permissions = var.role.permissions
 }
 
-resource "google_project_iam_member" "inference" {
+resource "google_project_iam_member" "access" {
   project = var.project_id
-  role    = google_project_iam_custom_role.inference.name
+  role    = google_project_iam_custom_role.access.name
   member  = "serviceAccount:${google_service_account.runtime.email}"
 }
