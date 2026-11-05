@@ -103,3 +103,11 @@ Object field definitions are documented in `variables.tf`.
 | `subnet_ids` | Subnet resource IDs keyed by name, after NSG/routing configuration. |
 | `route_table_ids` | Route table resource IDs keyed by logical name. |
 | `network_security_group_ids` | NSG resource IDs keyed by subnet name. |
+
+Subnets optionally declare `delegations` keyed by delegation name, with `service`
+and optional `actions`. APIM Standard v2 requires a dedicated integration subnet
+delegated to `Microsoft.Web/serverFarms`; keep private endpoints undelegated.
+
+A security rule with `destination_port_ranges = ["*"]` uses Azure's singular
+port field; other lists use its plural field. This preserves wildcard semantics
+without sending an invalid `destinationPortRanges` array to Azure.
