@@ -77,15 +77,17 @@ locals {
 }
 
 resource "azurerm_network_security_rule" "this" {
-  for_each                    = local.security_rules
-  name                        = each.value.name
-  description                 = each.value.description
-  priority                    = each.value.priority
-  direction                   = each.value.direction
-  access                      = each.value.access
-  protocol                    = each.value.protocol
-  source_port_range           = each.value.source_port_range
-  destination_port_ranges     = each.value.destination_port_ranges
+  for_each          = local.security_rules
+  name              = each.value.name
+  description       = each.value.description
+  priority          = each.value.priority
+  direction         = each.value.direction
+  access            = each.value.access
+  protocol          = each.value.protocol
+  source_port_range = each.value.source_port_range
+  # Azure accepts the wildcard only in the singular ARM port field.
+  destination_port_range      = length(each.value.destination_port_ranges) == 1 && contains(each.value.destination_port_ranges, "*") ? "*" : null
+  destination_port_ranges     = length(each.value.destination_port_ranges) == 1 && contains(each.value.destination_port_ranges, "*") ? null : each.value.destination_port_ranges
   source_address_prefix       = each.value.source_address_prefix
   destination_address_prefix  = each.value.destination_address_prefix
   resource_group_name         = var.resource_group_name

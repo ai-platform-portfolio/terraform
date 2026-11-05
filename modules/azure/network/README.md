@@ -107,3 +107,7 @@ Object field definitions are documented in `variables.tf`.
 Subnets optionally declare `delegations` keyed by delegation name, with `service`
 and optional `actions`. APIM Standard v2 requires a dedicated integration subnet
 delegated to `Microsoft.Web/serverFarms`; keep private endpoints undelegated.
+
+A security rule with `destination_port_ranges = ["*"]` uses Azure's singular
+port field; other lists use its plural field. This preserves wildcard semantics
+without sending an invalid `destinationPortRanges` array to Azure.
