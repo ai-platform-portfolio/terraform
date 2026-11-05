@@ -10,4 +10,4 @@ jobs:
     uses: ai-platform-portfolio/ops-shared/.github/workflows/validate.yml@ddf62422874ebe80765bb7535ed71d8220c92818
     with:
       terraform-directories: '["modules/*/*"]'
-      terraform-version: '1.5.7'
+      terraform-version: '1.9.8'

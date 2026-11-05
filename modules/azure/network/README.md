@@ -103,3 +103,7 @@ Object field definitions are documented in `variables.tf`.
 | `subnet_ids` | Subnet resource IDs keyed by name, after NSG/routing configuration. |
 | `route_table_ids` | Route table resource IDs keyed by logical name. |
 | `network_security_group_ids` | NSG resource IDs keyed by subnet name. |
+
+Subnets optionally declare `delegations` keyed by delegation name, with `service`
+and optional `actions`. APIM Standard v2 requires a dedicated integration subnet
+delegated to `Microsoft.Web/serverFarms`; keep private endpoints undelegated.
