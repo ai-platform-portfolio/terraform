@@ -43,12 +43,14 @@ variable "identity_type" {
 }
 
 variable "network_acls" {
-  description = "Account network ACL settings."
+  description = "Sensitive account network ACL settings; public IP addresses or CIDRs are caller-supplied."
   type = object({
     default_action = optional(string, "Deny")
     bypass         = optional(string, "None")
+    ip_rules       = optional(list(string), [])
   })
-  default = {}
+  default   = {}
+  sensitive = true
 }
 
 variable "role_assignments" {

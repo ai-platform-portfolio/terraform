@@ -27,6 +27,14 @@ This replaces the previous singleton `inference_*` inputs and
 `skip_service_principal_aad_check`. Existing consumers with a managed assignment
 must explicitly plan its state/address transition before adopting this interface.
 
+For selected-IP public access, set `account_settings.public_network_access_enabled`
+to `true` and supply `network_acls.ip_rules` as public IPv4 addresses or CIDRs.
+The default action remains `Deny` and bypass remains `None`; local authentication
+stays disabled unless explicitly overridden. The private endpoint remains present.
+`network_acls` is sensitive to redact addresses in normal Terraform plans. Values
+still exist in Terraform state and saved plans; protect those artifacts. The
+module defaults remain private-only with no IP rules.
+
 Supply all three Foundry private DNS zones: `privatelink.openai.azure.com`,
 `privatelink.cognitiveservices.azure.com` and `privatelink.services.ai.azure.com`.
 Place the private endpoint in its VNet region, which may differ from the Foundry

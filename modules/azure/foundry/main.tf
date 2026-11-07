@@ -53,6 +53,7 @@ resource "azapi_resource" "account" {
       networkAcls = {
         defaultAction = var.network_acls.default_action
         bypass        = var.network_acls.bypass
+        ipRules       = [for address in var.network_acls.ip_rules : { value = address }]
       }
     }
   }
