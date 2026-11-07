@@ -14,27 +14,50 @@ terraform {
   }
 }
 
-resource "azurerm_cognitive_account" "this" {
-  name                          = var.name
-  resource_group_name           = var.resource_group_name
-  location                      = var.location
-  kind                          = var.account_settings.kind
-  sku_name                      = var.sku_name
-  custom_subdomain_name         = coalesce(var.account_settings.custom_subdomain_name, var.name)
-  project_management_enabled    = var.account_settings.project_management_enabled
-  public_network_access_enabled = var.account_settings.public_network_access_enabled
-  local_auth_enabled            = var.account_settings.local_auth_enabled
-  tags                          = var.tags
+data "azurerm_client_config" "current" {}
 
-  identity {
-    type         = var.identity_type
-    identity_ids = [var.managed_identity_id]
+locals {
+  account_location   = lower(replace(var.location, " ", ""))
+  resource_group_id  = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/resourceGroups/${var.resource_group_name}"
+  deleted_account_id = "/subscriptions/${data.azurerm_client_config.current.subscription_id}/providers/Microsoft.CognitiveServices/locations/${local.account_location}/resourceGroups/${var.resource_group_name}/deletedAccounts/${var.name}"
+
+  account_retry = {
+    error_message_regex  = ["(?s)RequestConflict.*provisioning state is not terminal"]
+    interval_seconds     = 5
+    max_interval_seconds = 30
+  }
+}
+
+resource "azapi_resource" "account" {
+  # Reverse destroy order: children -> account -> purge. The purge action makes
+  # no API request on creation and must not reference account.id (a cycle).
+  depends_on = [azapi_resource_action.purge]
+
+  type      = "Microsoft.CognitiveServices/accounts@2026-03-01"
+  name      = var.name
+  parent_id = local.resource_group_id
+  location  = local.account_location
+  tags      = var.tags
+
+  body = {
+    identity = merge({ type = var.identity_type }, strcontains(var.identity_type, "UserAssigned") ? {
+      userAssignedIdentities = { (var.managed_identity_id) = {} }
+    } : {})
+    kind = var.account_settings.kind
+    sku  = { name = var.sku_name }
+    properties = {
+      allowProjectManagement = var.account_settings.project_management_enabled
+      customSubDomainName    = coalesce(var.account_settings.custom_subdomain_name, var.name)
+      disableLocalAuth       = !var.account_settings.local_auth_enabled
+      publicNetworkAccess    = var.account_settings.public_network_access_enabled ? "Enabled" : "Disabled"
+      networkAcls = {
+        defaultAction = var.network_acls.default_action
+        bypass        = var.network_acls.bypass
+      }
+    }
   }
 
-  network_acls {
-    default_action = var.network_acls.default_action
-    bypass         = var.network_acls.bypass
-  }
+  retry = local.account_retry
 
   timeouts {
     create = var.timeouts.create
@@ -43,10 +66,27 @@ resource "azurerm_cognitive_account" "this" {
   }
 }
 
+resource "azapi_resource_action" "purge" {
+  count = var.purge_on_destroy ? 1 : 0
+
+  type             = "Microsoft.CognitiveServices/locations/resourceGroups/deletedAccounts@2026-03-01"
+  resource_id      = local.deleted_account_id
+  method           = "DELETE"
+  when             = "destroy"
+  ignore_not_found = true
+  retry            = local.account_retry
+
+  timeouts {
+    # AzAPI 2.13's action executor uses create even for a destroy-time action.
+    create = var.timeouts.delete
+    delete = var.timeouts.delete
+  }
+}
+
 resource "azurerm_cognitive_account_project" "this" {
   for_each             = var.projects
   name                 = each.key
-  cognitive_account_id = azurerm_cognitive_account.this.id
+  cognitive_account_id = azapi_resource.account.id
   location             = var.location
   display_name         = each.value.display_name
   description          = each.value.description
@@ -69,7 +109,7 @@ resource "azapi_resource" "private_endpoint" {
 
   type      = "Microsoft.Network/privateEndpoints@2025-01-01"
   name      = coalesce(var.private_endpoint_settings.name, "${var.name}${var.private_endpoint_settings.name_suffix}")
-  parent_id = trimsuffix(azurerm_cognitive_account.this.id, "/providers/Microsoft.CognitiveServices/accounts/${var.name}")
+  parent_id = local.resource_group_id
   location  = var.private_endpoint_location
   tags      = var.tags
 
@@ -81,14 +121,14 @@ resource "azapi_resource" "private_endpoint" {
       privateLinkServiceConnections = var.private_endpoint_settings.is_manual_connection ? [] : [{
         name = coalesce(var.private_endpoint_settings.connection_name, var.name)
         properties = {
-          privateLinkServiceId = azurerm_cognitive_account.this.id
+          privateLinkServiceId = azapi_resource.account.id
           groupIds             = var.private_endpoint_settings.subresource_names
         }
       }]
       manualPrivateLinkServiceConnections = var.private_endpoint_settings.is_manual_connection ? [{
         name = coalesce(var.private_endpoint_settings.connection_name, var.name)
         properties = {
-          privateLinkServiceId = azurerm_cognitive_account.this.id
+          privateLinkServiceId = azapi_resource.account.id
           groupIds             = var.private_endpoint_settings.subresource_names
         }
       }] : []
@@ -125,7 +165,7 @@ resource "azurerm_cognitive_deployment" "this" {
 
   for_each               = var.deployments
   name                   = each.key
-  cognitive_account_id   = azurerm_cognitive_account.this.id
+  cognitive_account_id   = azapi_resource.account.id
   version_upgrade_option = each.value.version_upgrade_option
   rai_policy_name        = each.value.rai_policy_name
 
@@ -156,7 +196,7 @@ resource "azurerm_cognitive_deployment" "this" {
 
 resource "azurerm_role_assignment" "inference" {
   count                            = var.inference_principal_id == null ? 0 : 1
-  scope                            = azurerm_cognitive_account.this.id
+  scope                            = azapi_resource.account.id
   role_definition_name             = var.inference_role_name
   principal_id                     = var.inference_principal_id
   principal_type                   = var.inference_principal_type

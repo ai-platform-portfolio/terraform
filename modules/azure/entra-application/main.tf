@@ -157,6 +157,9 @@ resource "azuread_service_principal" "this" {
 }
 
 resource "azuread_application_federated_identity_credential" "this" {
+  # Serialize related directory writes; destroy credentials before the principal.
+  depends_on = [azuread_service_principal.this]
+
   for_each       = var.federated_credentials
   application_id = azuread_application.this.id
   display_name   = each.key

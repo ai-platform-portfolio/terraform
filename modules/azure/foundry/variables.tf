@@ -149,8 +149,14 @@ variable "deployments" {
   }
 }
 
+variable "purge_on_destroy" {
+  description = "Permanently purge the soft-deleted account after destruction; disable to retain Azure's recovery window."
+  type        = bool
+  default     = true
+}
+
 variable "timeouts" {
-  description = "Foundry account and model deployment operation timeouts."
+  description = "Foundry account/model operation timeouts; delete also bounds post-delete purge."
   type = object({
     create = optional(string, "1h")
     update = optional(string, "1h")

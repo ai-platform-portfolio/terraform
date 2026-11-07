@@ -27,16 +27,32 @@ The module provisions inference infrastructure. Gateway APIs, cross-cloud
 federation, private transport and runtime validation are separate dependencies.
 No agent compute, search service or storage is provisioned for inference-only use.
 
-References: [account](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_account),
+References: [account](https://learn.microsoft.com/en-us/azure/templates/microsoft.cognitiveservices/2026-03-01/accounts),
 [model deployment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_deployment),
 [private DNS](https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns),
 [processing scopes](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types).
 
 
-## Private endpoint handling
+## Native lifecycle handling
 
-The endpoint and its DNS zone group use AzAPI 2.13+. Account, project and model
-resources use AzureRM. The endpoint is ordered after all projects and model
-deployments. Native retry covers the known `Account.*state Accepted` HTTP error;
-it does not guarantee recovery from a later failed asynchronous operation.
-AzAPI attempts to retain resource identity after a failed create.
+The account, private endpoint and DNS group use AzAPI 2.13+. Projects and model
+deployments remain with AzureRM. Dependencies order destruction as DNS group,
+endpoint, models, projects, account, then purge. Creation uses the reverse order;
+the destroy-time purge action makes no API request during creation.
+
+Account operations retry only the observed `RequestConflict` response containing
+`provisioning state is not terminal`, within the operation timeout. This handles
+an HTTP conflict; it does not guarantee recovery from a failed asynchronous
+operation. The endpoint separately retries the known account-not-ready HTTP error.
+
+`purge_on_destroy` defaults to `true`, preserving permanent cleanup after account
+deletion. Set it to `false` to retain Azure's soft-delete recovery window. Purge
+uses the declared account location, group and name, and ignores an already absent
+record. The delete timeout also bounds purge; AzAPI 2.13's action executor uses
+its `create` timeout even for a destroy-time action. No CLI hook or state migration
+is included. Existing AzureRM account state needs separate ownership transfer;
+a fresh installation needs no migration.
+
+References: [native retry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/guides/feature_customized_retry),
+[destroy-time actions](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action),
+[account purge](https://learn.microsoft.com/en-us/rest/api/microsoftfoundry/accountmanagement/deleted-accounts/purge?view=rest-microsoftfoundry-accountmanagement-2025-06-01).
