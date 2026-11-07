@@ -33,36 +33,13 @@ References: [account](https://registry.terraform.io/providers/hashicorp/azurerm/
 [processing scopes](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types).
 
 
-## Private endpoint provider migration
+## Private endpoint handling
 
-Requires Terraform 1.8+ and AzAPI 2.13+. Existing account/project/model resources
-remain with AzureRM. The endpoint uses AzAPI with the same Network API and keeps
-its dependency on all projects and deployments. Native retry matches only the
-known `Account.*state Accepted` HTTP readiness error; it does not guarantee retry
-of a successful HTTP response whose asynchronous operation later fails.
-AzAPI attempts to read back an endpoint after create failure and retain its ID,
-so a subsequent Terraform operation can manage it without bespoke CLI cleanup.
+The endpoint and its DNS zone group use AzAPI 2.13+. Account, project and model
+resources use AzureRM. The endpoint is ordered after all projects and model
+deployments. Native retry covers the known `Account.*state Accepted` HTTP error;
+it does not guarantee recovery from a later failed asynchronous operation.
+AzAPI attempts to retain resource identity after a failed create.
 
-The `moved` block converts existing endpoint state without deleting the endpoint
-or its NIC. The formerly embedded DNS zone group is now a separate AzAPI resource
-and needs an import in the caller (Terraform permits import blocks only in root
-modules). GitOps bootstrap supplies a conditional native import: import when
-present, otherwise create normally. No existing resource may have two owners.
-Other callers must import their existing group before applying an upgrade:
-
-```hcl
-import {
-  to = module.foundry.azapi_resource.private_dns_zone_group
-  id = "${module.foundry.private_endpoint_id}/privateDnsZoneGroups/${module.foundry.private_dns_zone_group_name}"
-}
-```
-
-Review the migration plan: the endpoint must move in place and the DNS group must
-be imported, without deletes/replacements. No apply or production migration was
-performed during implementation. The original Azure
-`InvalidResponseFromPrivateLinkService` error remains unreproduced after four
-isolated comparisons; this change improves native state/error handling rather
-than claiming to fix that service-side error.
-
-Reference: Microsoft's [Cognitive Services module migration](https://github.com/Azure/terraform-azurerm-avm-res-cognitiveservices-account#modules),
-[AzAPI create error handling](https://github.com/Azure/terraform-provider-azapi/blob/v2.13.0/internal/services/azapi_resource.go).
+Existing deployments own their state migration in the calling root. This module
+contains no deployment-specific moved or import blocks.

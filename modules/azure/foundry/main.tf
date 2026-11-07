@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.8.0, < 2.0.0"
+  required_version = ">= 1.5.0, < 2.0.0"
 
   required_providers {
     azapi = {
@@ -62,12 +62,6 @@ resource "azurerm_cognitive_account_project" "this" {
     update = var.timeouts.update
     delete = var.timeouts.delete
   }
-}
-
-# Cross-provider state conversion preserves the endpoint and its network interface.
-moved {
-  from = azurerm_private_endpoint.this
-  to   = azapi_resource.private_endpoint
 }
 
 resource "azapi_resource" "private_endpoint" {
