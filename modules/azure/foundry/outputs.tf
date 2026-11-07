@@ -5,7 +5,7 @@ output "id" {
 
 output "openai_endpoint" {
   description = "OpenAI-compatible endpoint; resolve through the private endpoint and authenticate with Entra."
-  value       = "https://${coalesce(var.account_settings.custom_subdomain_name, var.name)}.openai.azure.com/"
+  value       = "https://${azapi_resource.account.body.properties.customSubDomainName}.openai.azure.com/"
 }
 
 output "private_endpoint_id" {
