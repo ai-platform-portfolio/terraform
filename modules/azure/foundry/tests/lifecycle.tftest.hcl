@@ -30,6 +30,8 @@ run "private_account_and_scoped_destroy_purge" {
       azapi_resource.account.body.properties.disableLocalAuth &&
       azapi_resource.account.body.properties.publicNetworkAccess == "Disabled" &&
       azapi_resource.account.body.properties.networkAcls.defaultAction == "Deny" &&
+      azapi_resource.account.body.properties.networkAcls.bypass == "None" &&
+      length(azapi_resource.account.body.properties.networkAcls.ipRules) == 0 &&
       azapi_resource.account.body.properties.allowProjectManagement &&
       azapi_resource.account.body.identity.type == "UserAssigned" &&
       contains(keys(azapi_resource.account.body.identity.userAssignedIdentities), var.managed_identity_id)
@@ -133,5 +135,25 @@ run "caller_settings_and_delete_budget" {
       azapi_resource_action.purge[0].timeouts.delete == "12m"
     )
     error_message = "Caller settings must translate correctly; purge must use the caller's delete budget through AzAPI's action timeout."
+  }
+}
+
+run "selected_ip_public_access" {
+  command = plan
+
+  variables {
+    account_settings = { public_network_access_enabled = true }
+    network_acls     = { ip_rules = ["203.0.113.8", "203.0.113.9"] }
+  }
+
+  assert {
+    condition = (
+      azapi_resource.account.body.properties.publicNetworkAccess == "Enabled" &&
+      azapi_resource.account.body.properties.disableLocalAuth &&
+      azapi_resource.account.body.properties.networkAcls.defaultAction == "Deny" &&
+      azapi_resource.account.body.properties.networkAcls.bypass == "None" &&
+      tolist([for rule in azapi_resource.account.body.properties.networkAcls.ipRules : rule.value]) == var.network_acls.ip_rules
+    )
+    error_message = "Selected-IP access must preserve default-deny, no bypass and keyless auth."
   }
 }
