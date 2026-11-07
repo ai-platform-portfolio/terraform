@@ -21,6 +21,11 @@ run "private_account_and_scoped_destroy_purge" {
   command = plan
 
   assert {
+    condition     = length(azurerm_role_assignment.this) == 0
+    error_message = "No RBAC assignments should be created without caller intent."
+  }
+
+  assert {
     condition = (
       azapi_resource.account.body.properties.disableLocalAuth &&
       azapi_resource.account.body.properties.publicNetworkAccess == "Disabled" &&
@@ -49,6 +54,49 @@ run "private_account_and_scoped_destroy_purge" {
       length(regexall(azapi_resource.account.retry.error_message_regex[0], "AuthorizationFailed: access denied")) == 0
     )
     error_message = "Only the observed non-terminal HTTP conflict is eligible for the custom retry."
+  }
+}
+
+run "multiple_account_role_assignments" {
+  command = apply
+
+  override_resource {
+    target = azapi_resource.private_endpoint
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/example-rg/providers/Microsoft.Network/privateEndpoints/example-models-pe"
+    }
+  }
+
+  override_resource {
+    target = azapi_resource.account
+    values = {
+      id = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/example-rg/providers/Microsoft.CognitiveServices/accounts/example-models"
+    }
+  }
+
+  variables {
+    role_assignments = {
+      administrators = {
+        principal_id         = "00000000-0000-0000-0000-000000000002"
+        role_definition_name = "Foundry Owner"
+      }
+      developers = {
+        principal_id         = "00000000-0000-0000-0000-000000000003"
+        role_definition_name = "Foundry User"
+      }
+    }
+  }
+
+  assert {
+    condition = (
+      toset(keys(azurerm_role_assignment.this)) == toset(keys(var.role_assignments)) &&
+      alltrue([for key, assignment in var.role_assignments :
+        azurerm_role_assignment.this[key].principal_id == assignment.principal_id &&
+        azurerm_role_assignment.this[key].role_definition_name == assignment.role_definition_name &&
+        azurerm_role_assignment.this[key].scope == azapi_resource.account.id
+      ])
+    )
+    error_message = "Each stable map key must create its requested principal/role grant on this account only."
   }
 }
 
