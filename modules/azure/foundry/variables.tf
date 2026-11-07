@@ -51,28 +51,13 @@ variable "network_acls" {
   default = {}
 }
 
-variable "inference_principal_id" {
-  description = "Optional existing principal for an account-scoped inference role; leave null when another owner manages inference RBAC."
-  type        = string
-  default     = null
-}
-
-variable "inference_role_name" {
-  description = "Account-scoped inference role, without model deployment permissions."
-  type        = string
-  default     = "Cognitive Services OpenAI User"
-}
-
-variable "inference_principal_type" {
-  description = "Azure RBAC principal type for the inference identity."
-  type        = string
-  default     = "ServicePrincipal"
-}
-
-variable "skip_service_principal_aad_check" {
-  description = "Skip the Entra propagation check for a newly created inference principal."
-  type        = bool
-  default     = true
+variable "role_assignments" {
+  description = "Account-scoped roles keyed by assignment purpose; principal IDs and role names belong to the caller."
+  type = map(object({
+    principal_id         = string
+    role_definition_name = string
+  }))
+  default = {}
 }
 
 variable "private_endpoint_location" {

@@ -194,11 +194,9 @@ resource "azurerm_cognitive_deployment" "this" {
   }
 }
 
-resource "azurerm_role_assignment" "inference" {
-  count                            = var.inference_principal_id == null ? 0 : 1
-  scope                            = azapi_resource.account.id
-  role_definition_name             = var.inference_role_name
-  principal_id                     = var.inference_principal_id
-  principal_type                   = var.inference_principal_type
-  skip_service_principal_aad_check = var.skip_service_principal_aad_check
+resource "azurerm_role_assignment" "this" {
+  for_each             = var.role_assignments
+  scope                = azapi_resource.account.id
+  role_definition_name = each.value.role_definition_name
+  principal_id         = each.value.principal_id
 }
