@@ -228,3 +228,8 @@ Sources: [application](https://registry.terraform.io/providers/hashicorp/azuread
 [app assignments and application consent](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/app_role_assignment),
 [delegated consent](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal_delegated_permission_grant),
 [federation](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application_federated_identity_credential).
+
+Federated credentials depend on the service principal so destruction removes
+credentials before the principal and application. This orders related directory
+writes within one instance; it does not serialize unrelated applications or
+guarantee immunity to tenant-wide concurrency conflicts.

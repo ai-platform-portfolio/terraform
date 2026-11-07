@@ -1,11 +1,11 @@
 output "id" {
   description = "Foundry account resource ID."
-  value       = azurerm_cognitive_account.this.id
+  value       = azapi_resource.account.id
 }
 
 output "openai_endpoint" {
   description = "OpenAI-compatible endpoint; resolve through the private endpoint and authenticate with Entra."
-  value       = "https://${azurerm_cognitive_account.this.custom_subdomain_name}.openai.azure.com/"
+  value       = "https://${coalesce(var.account_settings.custom_subdomain_name, var.name)}.openai.azure.com/"
 }
 
 output "private_endpoint_id" {

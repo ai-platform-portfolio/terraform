@@ -11,3 +11,20 @@ jobs:
     with:
       terraform-directories: '["modules/*/*"]'
       terraform-version: '1.9.8'
+
+  foundry-lifecycle:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          persist-credentials: false
+
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.9.8'
+
+      - run: terraform -chdir=modules/azure/foundry init -backend=false -input=false
+
+      - run: terraform -chdir=modules/azure/foundry test
