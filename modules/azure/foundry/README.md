@@ -31,3 +31,15 @@ References: [account](https://registry.terraform.io/providers/hashicorp/azurerm/
 [model deployment](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_deployment),
 [private DNS](https://learn.microsoft.com/en-us/azure/private-link/private-endpoint-dns),
 [processing scopes](https://learn.microsoft.com/en-us/azure/foundry/foundry-models/concepts/deployment-types).
+
+
+## Private endpoint handling
+
+The endpoint and its DNS zone group use AzAPI 2.13+. Account, project and model
+resources use AzureRM. The endpoint is ordered after all projects and model
+deployments. Native retry covers the known `Account.*state Accepted` HTTP error;
+it does not guarantee recovery from a later failed asynchronous operation.
+AzAPI attempts to retain resource identity after a failed create.
+
+Existing deployments own their state migration in the calling root. This module
+contains no deployment-specific moved or import blocks.

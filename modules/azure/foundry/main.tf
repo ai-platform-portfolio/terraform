@@ -2,6 +2,11 @@ terraform {
   required_version = ">= 1.5.0, < 2.0.0"
 
   required_providers {
+    azapi = {
+      source  = "Azure/azapi"
+      version = ">= 2.13, < 3.0"
+    }
+
     azurerm = {
       source  = "hashicorp/azurerm"
       version = ">= 4.81, < 5.0"
@@ -59,25 +64,59 @@ resource "azurerm_cognitive_account_project" "this" {
   }
 }
 
-resource "azurerm_private_endpoint" "this" {
+resource "azapi_resource" "private_endpoint" {
   depends_on = [azurerm_cognitive_account_project.this, azurerm_cognitive_deployment.this]
 
-  name                = coalesce(var.private_endpoint_settings.name, "${var.name}${var.private_endpoint_settings.name_suffix}")
-  resource_group_name = var.resource_group_name
-  location            = var.private_endpoint_location
-  subnet_id           = var.private_endpoint_subnet_id
-  tags                = var.tags
+  type      = "Microsoft.Network/privateEndpoints@2025-01-01"
+  name      = coalesce(var.private_endpoint_settings.name, "${var.name}${var.private_endpoint_settings.name_suffix}")
+  parent_id = trimsuffix(azurerm_cognitive_account.this.id, "/providers/Microsoft.CognitiveServices/accounts/${var.name}")
+  location  = var.private_endpoint_location
+  tags      = var.tags
 
-  private_service_connection {
-    name                           = coalesce(var.private_endpoint_settings.connection_name, var.name)
-    private_connection_resource_id = azurerm_cognitive_account.this.id
-    subresource_names              = var.private_endpoint_settings.subresource_names
-    is_manual_connection           = var.private_endpoint_settings.is_manual_connection
+  body = {
+    properties = {
+      customNetworkInterfaceName = ""
+      ipConfigurations           = []
+      subnet                     = { id = var.private_endpoint_subnet_id }
+      privateLinkServiceConnections = var.private_endpoint_settings.is_manual_connection ? [] : [{
+        name = coalesce(var.private_endpoint_settings.connection_name, var.name)
+        properties = {
+          privateLinkServiceId = azurerm_cognitive_account.this.id
+          groupIds             = var.private_endpoint_settings.subresource_names
+        }
+      }]
+      manualPrivateLinkServiceConnections = var.private_endpoint_settings.is_manual_connection ? [{
+        name = coalesce(var.private_endpoint_settings.connection_name, var.name)
+        properties = {
+          privateLinkServiceId = azurerm_cognitive_account.this.id
+          groupIds             = var.private_endpoint_settings.subresource_names
+        }
+      }] : []
+    }
   }
 
-  private_dns_zone_group {
-    name                 = var.private_endpoint_settings.dns_zone_group_name
-    private_dns_zone_ids = var.private_dns_zone_ids
+  # Retry the known HTTP readiness error, not arbitrary failed operations.
+  retry = { error_message_regex = ["Account.*state Accepted"] }
+
+  timeouts {
+    create = var.timeouts.create
+    update = var.timeouts.update
+    delete = var.timeouts.delete
+  }
+}
+
+resource "azapi_resource" "private_dns_zone_group" {
+  type      = "Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2025-01-01"
+  name      = var.private_endpoint_settings.dns_zone_group_name
+  parent_id = azapi_resource.private_endpoint.id
+
+  body = {
+    properties = {
+      privateDnsZoneConfigs = [for id in var.private_dns_zone_ids : {
+        name       = basename(id)
+        properties = { privateDnsZoneId = id }
+      }]
+    }
   }
 }
 
