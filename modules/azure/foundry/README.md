@@ -40,6 +40,3 @@ resources use AzureRM. The endpoint is ordered after all projects and model
 deployments. Native retry covers the known `Account.*state Accepted` HTTP error;
 it does not guarantee recovery from a later failed asynchronous operation.
 AzAPI attempts to retain resource identity after a failed create.
-
-Existing deployments own their state migration in the calling root. This module
-contains no deployment-specific moved or import blocks.
