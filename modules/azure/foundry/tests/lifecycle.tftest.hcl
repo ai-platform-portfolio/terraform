@@ -59,6 +59,24 @@ run "private_account_and_scoped_destroy_purge" {
   }
 }
 
+run "agent_network_injection" {
+  command = plan
+
+  variables {
+    agent_subnet_id = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/example-rg/providers/Microsoft.Network/virtualNetworks/example/subnets/agents"
+  }
+
+  assert {
+    condition = (
+      azapi_resource.account.body.properties.networkInjections[0].scenario == "agent" &&
+      azapi_resource.account.body.properties.networkInjections[0].subnetArmId == var.agent_subnet_id &&
+      !azapi_resource.account.body.properties.networkInjections[0].useMicrosoftManagedNetwork &&
+      contains(azapi_resource.account.replace_triggers_refs, "body.properties.networkInjections")
+    )
+    error_message = "Agent injection must use the caller's subnet and force replacement when changed."
+  }
+}
+
 run "multiple_account_role_assignments" {
   command = apply
 

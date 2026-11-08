@@ -45,18 +45,31 @@ resource "azapi_resource" "account" {
     } : {})
     kind = var.account_settings.kind
     sku  = { name = var.sku_name }
-    properties = {
-      allowProjectManagement = var.account_settings.project_management_enabled
-      customSubDomainName    = coalesce(var.account_settings.custom_subdomain_name, var.name)
-      disableLocalAuth       = !var.account_settings.local_auth_enabled
-      publicNetworkAccess    = var.account_settings.public_network_access_enabled ? "Enabled" : "Disabled"
-      networkAcls = {
-        defaultAction = var.network_acls.default_action
-        bypass        = var.network_acls.bypass
-        ipRules       = [for address in var.network_acls.ip_rules : { value = address }]
+    properties = merge(
+      {
+        allowProjectManagement = var.account_settings.project_management_enabled
+        customSubDomainName    = coalesce(var.account_settings.custom_subdomain_name, var.name)
+        disableLocalAuth       = !var.account_settings.local_auth_enabled
+        publicNetworkAccess    = var.account_settings.public_network_access_enabled ? "Enabled" : "Disabled"
+        networkAcls = {
+          defaultAction = var.network_acls.default_action
+          bypass        = var.network_acls.bypass
+          ipRules       = [for address in var.network_acls.ip_rules : { value = address }]
+        }
+      },
+      var.agent_subnet_id == null ? {} : {
+        networkInjections = [{
+          scenario                   = "agent"
+          subnetArmId                = var.agent_subnet_id
+          useMicrosoftManagedNetwork = false
+        }]
       }
-    }
+    )
   }
+
+  # Agent egress topology is a create-time property. A changed subnet must
+  # replace the account instead of issuing an unsupported in-place update.
+  replace_triggers_refs = ["body.properties.networkInjections"]
 
   retry = local.account_retry
 
