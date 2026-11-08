@@ -63,6 +63,16 @@ deployments remain with AzureRM. Dependencies order destruction as DNS group,
 endpoint, models, projects, account, then purge. Creation uses the reverse order;
 the destroy-time purge action makes no API request during creation.
 
+The endpoint is replaced when the account ID is planned to change. An account
+replacement can reuse the same ARM ID while Azure deletes its old private-link
+connection; retaining the endpoint then leaves it `Disconnected` and removes its
+DNS record. Referencing the account ID avoids replacing the endpoint for ordinary
+in-place account changes, such as an IP allowlist update. The dependent DNS zone
+group is replaced with the endpoint. For an account already replaced before this
+rule was installed, repair the existing disconnected endpoint with a reviewed,
+one-time Terraform `-replace` plan; the new rule cannot retroactively detect that
+past account change.
+
 Account operations retry only the observed `RequestConflict` response containing
 `provisioning state is not terminal`, within the operation timeout. This handles
 an HTTP conflict; it does not guarantee recovery from a failed asynchronous

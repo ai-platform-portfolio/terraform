@@ -108,6 +108,11 @@ resource "azurerm_cognitive_account_project" "this" {
 resource "azapi_resource" "private_endpoint" {
   depends_on = [azurerm_cognitive_account_project.this, azurerm_cognitive_deployment.this]
 
+  lifecycle {
+    # Reconnect when a replacement account reuses the same ARM resource ID.
+    replace_triggered_by = [azapi_resource.account.id]
+  }
+
   type      = "Microsoft.Network/privateEndpoints@2025-01-01"
   name      = coalesce(var.private_endpoint_settings.name, "${var.name}${var.private_endpoint_settings.name_suffix}")
   parent_id = local.resource_group_id
