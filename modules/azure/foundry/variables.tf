@@ -53,6 +53,12 @@ variable "network_acls" {
   sensitive = true
 }
 
+variable "agent_subnet_id" {
+  description = "Optional same-region subnet delegated to Microsoft.App/environments for Foundry Agent Service egress. Set at account creation."
+  type        = string
+  default     = null
+}
+
 variable "role_assignments" {
   description = "Account-scoped roles keyed by assignment purpose; principal IDs and role names belong to the caller."
   type = map(object({
