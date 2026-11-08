@@ -7,6 +7,10 @@ deployment roots; this module library does not own deployment state.
 
 | Module | Purpose |
 | --- | --- |
+| [servicebus](modules/azure/servicebus) | Service bus namespace with named children and optional private endpoints |
+| [eventhub](modules/azure/eventhub) | Event hubs namespace with named children and optional private endpoints |
+| [eventgrid](modules/azure/eventgrid) | Event grid domain with named children and optional private endpoints |
+| [managed-redis](modules/azure/managed-redis) | Azure managed redis instance with named children and optional private endpoints |
 | [network](modules/azure/network) | VNet, named subnets, NSGs and optional route tables/routes |
 | [aks-cluster](modules/azure/aks-cluster) | Entra-enabled AKS, control-plane identity, node pools and OIDC |
 | [entra-application](modules/azure/entra-application) | Entra OIDC/OAuth clients and APIs, app roles, consent, federation and scoped Azure access |

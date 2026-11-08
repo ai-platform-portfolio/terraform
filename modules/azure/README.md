@@ -13,3 +13,11 @@ Deployment-specific configuration belongs in the
 - [Foundry](foundry/README.md): private AI Services account, projects, model deployments and inference RBAC.
 
 - [Kubernetes Fleet Manager](kubernetes-fleet-manager/README.md): shared hubless fleet; cluster roots own their memberships through the AKS module.
+
+- [Service bus namespace](servicebus/README.md): one parent with map-based children and optional private endpoints.
+
+- [Event hubs namespace](eventhub/README.md): one parent with map-based children and optional private endpoints.
+
+- [Event grid domain](eventgrid/README.md): one parent with map-based children and optional private endpoints.
+
+- [Azure managed redis instance](managed-redis/README.md): one parent with map-based children and optional private endpoints.
