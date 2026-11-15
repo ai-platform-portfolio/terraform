@@ -1,5 +1,5 @@
 variable "name" {
-  description = "Container App name, unique within its resource group."
+  description = "Container App name, unique within its environment and resource group."
   type        = string
 }
 

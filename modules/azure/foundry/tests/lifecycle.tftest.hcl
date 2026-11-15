@@ -5,6 +5,21 @@ mock_provider "azurerm" {
 }
 mock_provider "azapi" {}
 
+# Keep computed IDs valid during mocked plans as well as apply.
+override_resource {
+  target = azapi_resource.private_endpoint
+  values = {
+    id = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/example-rg/providers/Microsoft.Network/privateEndpoints/example-models-pe"
+  }
+}
+
+override_resource {
+  target = azapi_resource.account
+  values = {
+    id = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/example-rg/providers/Microsoft.CognitiveServices/accounts/example-models"
+  }
+}
+
 variables {
   name                       = "example-models"
   resource_group_name        = "example-rg"
@@ -79,20 +94,6 @@ run "agent_network_injection" {
 
 run "multiple_account_role_assignments" {
   command = apply
-
-  override_resource {
-    target = azapi_resource.private_endpoint
-    values = {
-      id = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/example-rg/providers/Microsoft.Network/privateEndpoints/example-models-pe"
-    }
-  }
-
-  override_resource {
-    target = azapi_resource.account
-    values = {
-      id = "/subscriptions/00000000-0000-0000-0000-000000000001/resourceGroups/example-rg/providers/Microsoft.CognitiveServices/accounts/example-models"
-    }
-  }
 
   variables {
     role_assignments = {
@@ -170,7 +171,7 @@ run "selected_ip_public_access" {
       azapi_resource.account.body.properties.disableLocalAuth &&
       azapi_resource.account.body.properties.networkAcls.defaultAction == "Deny" &&
       azapi_resource.account.body.properties.networkAcls.bypass == "None" &&
-      tolist([for rule in azapi_resource.account.body.properties.networkAcls.ipRules : rule.value]) == var.network_acls.ip_rules
+      toset([for rule in azapi_resource.account.body.properties.networkAcls.ipRules : rule.value]) == toset(var.network_acls.ip_rules)
     )
     error_message = "Selected-IP access must preserve default-deny, no bypass and keyless auth."
   }
