@@ -7,6 +7,8 @@ deployment roots; this module library does not own deployment state.
 
 | Module | Purpose |
 | --- | --- |
+| [container-app-environment](modules/azure/container-app-environment) | One Azure Container Apps Consumption environment |
+| [container-app](modules/azure/container-app) | One HTTP app with managed identity, safe ingress defaults and optional managed HTTPS |
 | [servicebus](modules/azure/servicebus) | Service bus namespace with named children and optional private endpoints |
 | [eventhub](modules/azure/eventhub) | Event hubs namespace with named children and optional private endpoints |
 | [eventgrid](modules/azure/eventgrid) | Event grid domain with named children and optional private endpoints |
@@ -44,8 +46,15 @@ module "network" {
 ```
 
 Provider configurations belong in callers. This repo never applies infrastructure.
-Run `terraform fmt -check -recursive .` and `terraform init -backend=false` /
-`terraform validate` in each module. CI performs these checks without Azure access.
+Run `tofu fmt -check -recursive .` and `tofu init -backend=false` /
+`tofu validate` in each module. CI performs these checks without Azure access.
 
 CI discovers `modules/*/*` through the shared validation workflow, so new modules
 are included without editing a directory list.
+
+The Container Apps modules compose with the existing `managed-identity` module;
+callers own resource groups, custom permissions, provider configuration and
+instance repetition, following `gitops/bootstrap`. The portfolio root in `.github`
+is an acceptance consumer. No hosting names, domains or AKS role definitions are
+embedded in the modules. CI uses OpenTofu 1.13.9 and runs mocked native lifecycle
+tests for Container Apps and the existing Foundry module. No Azure apply is run.

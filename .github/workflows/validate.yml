@@ -1,4 +1,4 @@
-name: Validate Terraform
+name: Validate infrastructure
 on:
   pull_request:
   push:
@@ -7,24 +7,29 @@ permissions:
   contents: read
 jobs:
   validate:
-    uses: ai-platform-portfolio/ops-shared/.github/workflows/validate.yml@ddf62422874ebe80765bb7535ed71d8220c92818
+    uses: ai-platform-portfolio/ops-shared/.github/workflows/validate.yml@f61b3e4f5c5db462c73581c0b95ddefef14b9569
     with:
       terraform-directories: '["modules/*/*"]'
-      terraform-version: '1.9.8'
+      tofu-version: '1.13.9'
 
-  foundry-lifecycle:
+  module-lifecycle:
     runs-on: ubuntu-latest
     timeout-minutes: 10
+
+    strategy:
+      matrix:
+        module: [foundry, container-app]
 
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           persist-credentials: false
 
-      - uses: hashicorp/setup-terraform@v3
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4
         with:
-          terraform_version: '1.9.8'
+          tofu_version: '1.13.9'
+          tofu_wrapper: false
 
-      - run: terraform -chdir=modules/azure/foundry init -backend=false -input=false
+      - run: tofu -chdir=modules/azure/${{ matrix.module }} init -backend=false -input=false
 
-      - run: terraform -chdir=modules/azure/foundry test
+      - run: tofu -chdir=modules/azure/${{ matrix.module }} test
