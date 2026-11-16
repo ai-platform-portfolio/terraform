@@ -41,4 +41,3 @@ token audience, and `subject = "system:serviceaccount:litellm:litellm"`. Omit
 and accepts only that exact subject; no wildcard subject or cloud credential is
 created. The caller still owns the existing project, inference permission list,
 projected token delivery and native Google external-account configuration.
-
