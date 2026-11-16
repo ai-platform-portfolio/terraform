@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [foundry, container-app]
+        module: [azure/foundry, azure/container-app, aws/workload-identity]
 
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -31,6 +31,6 @@ jobs:
           tofu_version: '1.13.9'
           tofu_wrapper: false
 
-      - run: tofu -chdir=modules/azure/${{ matrix.module }} init -backend=false -input=false
+      - run: tofu -chdir=modules/${{ matrix.module }} init -backend=false -input=false
 
-      - run: tofu -chdir=modules/azure/${{ matrix.module }} test
+      - run: tofu -chdir=modules/${{ matrix.module }} test
