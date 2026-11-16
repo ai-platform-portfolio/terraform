@@ -13,12 +13,14 @@ variable "tenant_id" {
   description = "Authorized Entra tenant."
   type        = string
   sensitive   = true
+  default     = null
 }
 
 variable "principal_id" {
   description = "Authorized existing managed identity object ID."
   type        = string
   sensitive   = true
+  default     = null
 }
 
 variable "issuer" {
@@ -36,6 +38,18 @@ variable "audience" {
 variable "role_value" {
   description = "Required application role claim."
   type        = string
+  default     = null
+}
+
+variable "subject" {
+  description = "Optional exact native OIDC subject, e.g. one Kubernetes ServiceAccount. Null preserves the Entra claims contract."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.subject == null || can(regex("^system:serviceaccount:[a-z0-9-]+:[a-z0-9-]+$", var.subject))
+    error_message = "Native AKS federation requires one exact ServiceAccount subject, never a wildcard."
+  }
 }
 
 variable "provider_id" {

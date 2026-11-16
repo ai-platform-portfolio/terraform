@@ -32,3 +32,13 @@ with Terraform 1.9+. Mocked tests check the exact identity trust and caller-defi
 role metadata/permissions; they do not prove a real token exchange.
 
 [Google's Azure federation documentation](https://docs.cloud.google.com/iam/docs/workload-identity-federation-with-other-clouds).
+# Native AKS callers
+
+The existing Entra contract is unchanged. To trust one AKS ServiceAccount directly,
+declare `issuer` as the cluster's OIDC issuer, `audience` as the dedicated projected
+token audience, and `subject = "system:serviceaccount:litellm:litellm"`. Omit
+`tenant_id`, `principal_id` and `role_value` in this mode. The provider maps `sub`
+and accepts only that exact subject; no wildcard subject or cloud credential is
+created. The caller still owns the existing project, inference permission list,
+projected token delivery and native Google external-account configuration.
+

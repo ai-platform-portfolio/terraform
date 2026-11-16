@@ -12,7 +12,7 @@ terraform {
 resource "google_iam_workload_identity_pool" "runtime" {
   project                   = var.project_id
   workload_identity_pool_id = "${var.name}-runtime"
-  display_name              = "${var.name} Azure runtime"
+  display_name              = "${var.name} federated runtime"
 }
 
 resource "google_iam_workload_identity_pool_provider" "azure" {
@@ -20,12 +20,19 @@ resource "google_iam_workload_identity_pool_provider" "azure" {
   workload_identity_pool_id          = google_iam_workload_identity_pool.runtime.workload_identity_pool_id
   workload_identity_pool_provider_id = var.provider_id
   attribute_mapping = {
-    "google.subject" = "assertion.oid"
+    "google.subject" = var.subject == null ? "assertion.oid" : "assertion.sub"
   }
-  attribute_condition = "assertion.tid == '${var.tenant_id}' && assertion.oid == '${var.principal_id}' && '${var.role_value}' in assertion.roles"
+  attribute_condition = var.subject != null ? "assertion.sub == '${var.subject}'" : "assertion.tid == '${coalesce(var.tenant_id, "unset")}' && assertion.oid == '${coalesce(var.principal_id, "unset")}' && '${coalesce(var.role_value, "unset")}' in assertion.roles"
   oidc {
     issuer_uri        = var.issuer
     allowed_audiences = [var.audience]
+  }
+
+  lifecycle {
+    precondition {
+      condition     = var.subject != null || alltrue([var.tenant_id != null, var.principal_id != null, var.role_value != null])
+      error_message = "Declare either an exact native OIDC subject or the complete existing Entra claim contract."
+    }
   }
 }
 
@@ -38,7 +45,7 @@ resource "google_service_account" "runtime" {
 resource "google_service_account_iam_member" "azure" {
   service_account_id = google_service_account.runtime.name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "principal://iam.googleapis.com/${google_iam_workload_identity_pool.runtime.name}/subject/${var.principal_id}"
+  member             = "principal://iam.googleapis.com/${google_iam_workload_identity_pool.runtime.name}/subject/${var.subject != null ? var.subject : var.principal_id}"
   depends_on         = [google_iam_workload_identity_pool_provider.azure]
 }
 
