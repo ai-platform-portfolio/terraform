@@ -4,7 +4,7 @@ mock_provider "azuread" {
   }
 
   mock_resource "azuread_application" {
-    defaults = { client_id = "00000000-0000-0000-0000-000000000005" }
+    defaults = { client_id = "00000000-0000-0000-0000-000000000005", id = "/applications/00000000-0000-0000-0000-000000000005" }
   }
 }
 
@@ -41,7 +41,7 @@ run "assigned_saml_access" {
   }
 
   assert {
-    condition     = azuread_application.this.identifier_uris == toset([var.service_provider.entity_id]) && azuread_application.this.web[0].redirect_uris == toset([var.service_provider.acs_url])
+    condition     = azuread_application_identifier_uri.this.identifier_uri == var.service_provider.entity_id && azuread_application.this.web[0].redirect_uris == toset([var.service_provider.acs_url])
     error_message = "The app must use only the declared service provider entity and callback."
   }
 
