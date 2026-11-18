@@ -16,6 +16,7 @@ deployment roots; this module library does not own deployment state.
 | [network](modules/azure/network) | VNet, named subnets, NSGs and optional route tables/routes |
 | [aks-cluster](modules/azure/aks-cluster) | Entra-enabled AKS, control-plane identity, node pools and OIDC |
 | [entra-application](modules/azure/entra-application) | Entra OIDC/OAuth clients and APIs, app roles, consent, federation and scoped Azure access |
+| [azure/saml-application](modules/azure/saml-application) | Gallery SAML application, signing certificate and explicit user/group assignments |
 | [entra-group](modules/azure/entra-group) | Entra security groups with explicit owners/members and optional scoped Azure roles |
 | [apim](modules/azure/apim) | Private Standard v2 API Management with managed identity and VNet integration |
 | [gcp/workload-identity](modules/gcp/workload-identity) | Keyless Azure-to-Google federation with caller-defined project permissions |
@@ -24,6 +25,7 @@ deployment roots; this module library does not own deployment state.
 | [managed-identity](modules/azure/managed-identity) | Workload identities, OIDC federated credentials and scoped role assignments |
 | [postgresql-flexible-server](modules/azure/postgresql-flexible-server) | Private Azure PostgreSQL server with Entra-only authentication and administrators |
 | [argocd-bootstrap](modules/azure/argocd-bootstrap) | Initial ArgoCD installation through Helm |
+| [aws/identity-center-access](modules/aws/identity-center-access) | Scoped Identity Center permission set and assignments into one account |
 
 Modules are grouped by provider under `modules/<provider>/<name>/`.
 Key Vault, storage-account and

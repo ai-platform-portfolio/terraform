@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        module: [azure/foundry, azure/container-app, aws/workload-identity]
+        module: [azure/foundry, azure/container-app, aws/workload-identity, azure/saml-application, aws/identity-center-access]
 
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
