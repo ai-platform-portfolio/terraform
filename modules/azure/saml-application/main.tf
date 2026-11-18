@@ -17,7 +17,6 @@ resource "azuread_application" "this" {
   display_name            = var.display_name
   template_id             = data.azuread_application_template.this.template_id
   owners                  = var.owners
-  identifier_uris         = [var.service_provider.entity_id]
   prevent_duplicate_names = true
 
   web {
@@ -27,7 +26,7 @@ resource "azuread_application" "this" {
 
   lifecycle {
     # Preserve gallery-owned role IDs and API scopes across subsequent plans.
-    ignore_changes = [app_role, api]
+    ignore_changes = [app_role, api, identifier_uris]
   }
 }
 
@@ -40,6 +39,15 @@ resource "azuread_service_principal" "this" {
   # Instantiating a gallery application also creates its principal. This resource
   # deliberately owns that newly created principal, not an unrelated existing app.
   use_existing = true
+}
+
+# Entra exempts SAML service principals from verified-domain URI restrictions.
+# Enable SAML first, then assign the external service provider's entity ID.
+resource "azuread_application_identifier_uri" "this" {
+  application_id = azuread_application.this.id
+  identifier_uri = var.service_provider.entity_id
+
+  depends_on = [azuread_service_principal.this]
 }
 
 resource "azuread_service_principal_token_signing_certificate" "this" {
