@@ -55,3 +55,21 @@ missing app. HTTP settings, replica bounds and DNS names stay caller-derived.
 Run `tofu init -backend=false`, `tofu validate` and `tofu test`. Tests use mocked
 providers, covering private defaults, optional HTTPS wiring, another caller's
 names and invalid intent. They do not prove Azure issuance, renewal or cleanup.
+
+Optional `scheduled_jobs` run commands from the same image in the same environment,
+using the existing identity/registry and CPU/memory allocation. Each map key names
+an app-related job (`<app>-<key>`); callers supply UTC cron, command, optional args
+and job-specific environment variables. Defaults are one replica, a300second
+timeout and one retry. No jobs are created by default. Jobs follow image updates
+and are destroyed with the application module; no separate state or CI deployment
+step is needed.
+
+```hcl
+scheduled_jobs = {
+  maintenance = {
+    schedule = "0 2 * * *"
+    command  = ["python"]
+    args     = ["/app/maintenance.py"]
+  }
+}
+```

@@ -32,6 +32,7 @@ run "private_defaults_without_domain_or_registry" {
       azurerm_container_app.this.template[0].min_replicas == 0 &&
       azurerm_container_app.this.template[0].max_replicas == 1 &&
       length(azurerm_container_app.this.registry) == 0 &&
+      length(azurerm_container_app_job.this) == 0 &&
       length(azurerm_dns_cname_record.this) == 0 &&
       length(azurerm_container_app_environment_managed_certificate.this) == 0 &&
       length(azapi_update_resource.https_binding) == 0 &&
@@ -117,4 +118,36 @@ run "reject_invalid_replica_bounds" {
   variables { replicas = { min = 2, max = 1 } }
 
   expect_failures = [var.replicas]
+}
+
+run "scheduled_command_shares_application_resources" {
+  command = plan
+
+  variables {
+    registry_server = "example.azurecr.io"
+    scheduled_jobs = {
+      maintenance = {
+        schedule = "0 2 * * *"
+        command  = ["python"]
+        args     = ["/app/maintenance.py"]
+        environment_variables = { MODE = "leftovers" }
+      }
+    }
+  }
+
+  assert {
+    condition = (
+      azurerm_container_app_job.this["maintenance"].name == "example-maintenance" &&
+      azurerm_container_app_job.this["maintenance"].container_app_environment_id == var.container_app_environment_id &&
+      azurerm_container_app_job.this["maintenance"].identity[0].identity_ids == toset([var.managed_identity_id]) &&
+      azurerm_container_app_job.this["maintenance"].registry[0].identity == var.managed_identity_id &&
+      azurerm_container_app_job.this["maintenance"].template[0].container[0].image == var.image &&
+      azurerm_container_app_job.this["maintenance"].template[0].container[0].command == tolist(["python"]) &&
+      azurerm_container_app_job.this["maintenance"].template[0].container[0].env[0].name == "MODE" &&
+      azurerm_container_app_job.this["maintenance"].schedule_trigger_config[0].cron_expression == "0 2 * * *" &&
+      azurerm_container_app_job.this["maintenance"].replica_timeout_in_seconds == 300 &&
+      azurerm_container_app_job.this["maintenance"].replica_retry_limit == 1
+    )
+    error_message = "Scheduled commands must reuse this application's image/identity/environment with bounded execution and explicit job configuration."
+  }
 }
