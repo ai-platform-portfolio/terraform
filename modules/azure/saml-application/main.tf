@@ -54,6 +54,31 @@ resource "azuread_service_principal_token_signing_certificate" "this" {
   service_principal_id = azuread_service_principal.this.id
 }
 
+resource "azuread_claims_mapping_policy" "name_id" {
+  count = var.name_id_source == null ? 0 : 1
+
+  display_name = "${var.display_name}-name-id"
+  definition = [jsonencode({
+    ClaimsMappingPolicy = {
+      Version              = 1
+      IncludeBasicClaimSet = "true"
+      ClaimsSchema = [{
+        Source           = "user"
+        ID               = var.name_id_source
+        SamlClaimType    = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
+        SamlNameIdFormat = "urn:oasis:names:tc:SAML:1.1:nameid-format:emailAddress"
+      }]
+    }
+  })]
+}
+
+resource "azuread_service_principal_claims_mapping_policy_assignment" "name_id" {
+  count = var.name_id_source == null ? 0 : 1
+
+  service_principal_id     = azuread_service_principal.this.id
+  claims_mapping_policy_id = azuread_claims_mapping_policy.name_id[0].id
+}
+
 resource "azuread_app_role_assignment" "this" {
   for_each = var.assignments
 
@@ -63,6 +88,8 @@ resource "azuread_app_role_assignment" "this" {
     for role in azuread_service_principal.this.app_roles : role.id
     if role.display_name == each.value.role_name && role.enabled && contains(role.allowed_member_types, "User")
   ])
+
+  depends_on = [azuread_service_principal_claims_mapping_policy_assignment.name_id]
 
   lifecycle {
     precondition {
