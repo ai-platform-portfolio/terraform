@@ -4,8 +4,19 @@ variable "display_name" {
 }
 
 variable "template_name" {
-  description = "Exact Entra gallery template name; gallery defaults own the SAML claims."
+  description = "Exact Entra gallery template name; gallery defaults own claims unless NameID is overridden."
   type        = string
+}
+
+variable "name_id_source" {
+  description = "Optional native user attribute for an email-address SAML NameID; null retains gallery claims."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.name_id_source == null ? true : trimspace(var.name_id_source) != ""
+    error_message = "NameID source must be a nonempty native user attribute or null."
+  }
 }
 
 variable "owners" {
