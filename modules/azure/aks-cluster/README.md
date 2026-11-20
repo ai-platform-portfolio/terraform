@@ -41,6 +41,7 @@ module "aks" {
 | `resource_group_name` | `string` | required | Existing resource group. |
 | `tenant_id` | `string` | required | Entra tenant ID. |
 | `kubernetes_version` | `string` | required | Explicit AKS Kubernetes version supported in the target region. |
+| `blob_driver_enabled` | `bool` | `false` | Enable the native AKS Blob CSI add-on. Disk/File drivers keep provider defaults. |
 | `vnet_subnet_id` | `string` | required | System node pool subnet resource ID. |
 | `admin_group_object_ids` | `list(string)` | required | Entra security groups granted Kubernetes cluster admin. |
 | `authorized_ip_ranges` | `list(string)` | required | CIDRs allowed to access the public AKS API, including the deployment runner. |

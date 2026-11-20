@@ -38,6 +38,10 @@ resource "azurerm_kubernetes_cluster" "this" {
   role_based_access_control_enabled = true
   tags                              = var.tags
 
+  storage_profile {
+    blob_driver_enabled = var.blob_driver_enabled
+  }
+
   default_node_pool {
     name                         = "system"
     temporary_name_for_rotation  = "systemtemp"
