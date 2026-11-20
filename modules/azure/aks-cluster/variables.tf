@@ -23,6 +23,12 @@ variable "kubernetes_version" {
   type        = string
 }
 
+variable "blob_driver_enabled" {
+  description = "Enable the native AKS Blob CSI add-on; callers retain the disabled default."
+  type        = bool
+  default     = false
+}
+
 variable "vnet_subnet_id" {
   description = "System node pool subnet resource ID."
   type        = string
