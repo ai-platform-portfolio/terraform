@@ -127,9 +127,9 @@ run "scheduled_command_shares_application_resources" {
     registry_server = "example.azurecr.io"
     scheduled_jobs = {
       maintenance = {
-        schedule = "0 2 * * *"
-        command  = ["python"]
-        args     = ["/app/maintenance.py"]
+        schedule              = "0 2 * * *"
+        command               = ["python"]
+        args                  = ["/app/maintenance.py"]
         environment_variables = { MODE = "leftovers" }
       }
     }
