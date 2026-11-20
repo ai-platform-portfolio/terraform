@@ -104,3 +104,16 @@ variable "tags" {
   type        = map(string)
   default     = {}
 }
+
+variable "scheduled_jobs" {
+  description = "Scheduled commands using this app's image, environment, identity and registry. Cron is UTC; job-specific environment replaces the web environment."
+  type = map(object({
+    schedule              = string
+    command               = list(string)
+    args                  = optional(list(string), [])
+    environment_variables = optional(map(string), {})
+    timeout_seconds       = optional(number, 300)
+    retry_limit           = optional(number, 1)
+  }))
+  default = {}
+}
