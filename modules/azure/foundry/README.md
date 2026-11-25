@@ -89,3 +89,8 @@ a fresh installation needs no migration.
 References: [native retry](https://registry.terraform.io/providers/Azure/azapi/latest/docs/guides/feature_customized_retry),
 [destroy-time actions](https://registry.terraform.io/providers/Azure/azapi/latest/docs/resources/resource_action),
 [account purge](https://learn.microsoft.com/en-us/rest/api/microsoftfoundry/accountmanagement/deleted-accounts/purge?view=rest-microsoftfoundry-accountmanagement-2025-06-01).
+
+Account deletion retries Azure's specific `CannotDeleteResource` nested-resource
+conflict while a deleted project's removal propagates. The existing bounded
+retry intervals and delete timeout apply; unrelated conflicts and permission
+failures still fail. Destruction remains projects → account → purge.

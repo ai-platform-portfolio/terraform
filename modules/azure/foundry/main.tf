@@ -71,7 +71,12 @@ resource "azapi_resource" "account" {
   # replace the account instead of issuing an unsupported in-place update.
   replace_triggers_refs = ["body.properties.networkInjections"]
 
-  retry = local.account_retry
+  # Project DELETE can finish before Azure removes it from the parent account.
+  retry = merge(local.account_retry, {
+    error_message_regex = concat(local.account_retry.error_message_regex, [
+      "(?s)CannotDeleteResource.*Cannot delete resource while nested resources exist"
+    ])
+  })
 
   timeouts {
     create = var.timeouts.create

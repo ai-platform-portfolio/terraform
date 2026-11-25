@@ -70,7 +70,24 @@ run "private_account_and_scoped_destroy_purge" {
       length(regexall(azapi_resource.account.retry.error_message_regex[0], "RequestConflict: account name is already in use")) == 0 &&
       length(regexall(azapi_resource.account.retry.error_message_regex[0], "AuthorizationFailed: access denied")) == 0
     )
-    error_message = "Only the observed non-terminal HTTP conflict is eligible for the custom retry."
+    error_message = "The provisioning retry must match only the observed non-terminal conflict."
+  }
+
+  assert {
+    condition = (
+      anytrue([for pattern in azapi_resource.account.retry.error_message_regex :
+        length(regexall(pattern, "CannotDeleteResource\nCannot delete resource while nested resources exist. Some existing nested resource IDs include: 'Microsoft.CognitiveServices/accounts/example-models/projects/management'.")) == 1
+      ]) &&
+      alltrue([for message in [
+        "CannotDeleteResource: resource is locked",
+        "RequestConflict: account name is already in use",
+        "AuthorizationFailed: access denied"
+      ] : alltrue([for pattern in azapi_resource.account.retry.error_message_regex : length(regexall(pattern, message)) == 0])]) &&
+      alltrue([for pattern in azapi_resource_action.purge[0].retry.error_message_regex :
+        length(regexall(pattern, "CannotDeleteResource: Cannot delete resource while nested resources exist")) == 0
+      ])
+    )
+    error_message = "Retry only the observed parent-account deletion propagation conflict; leave unrelated failures and purge matching unchanged."
   }
 }
 
